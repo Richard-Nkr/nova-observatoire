@@ -56,7 +56,7 @@ const COLUMN_DEFS: {
   { id: "note", label: "Note", width: 40, align: "right", sortKey: "note" },
 ];
 
-const DEFAULT_COLUMNS: ResultColumn[] = ["categorie", "caTotal", "caParCle"];
+const DEFAULT_COLUMNS: ResultColumn[] = ["categorie", "caTotal"];
 
 export interface ResultsPanelProps {
   hotels: Hotel[];
@@ -150,7 +150,7 @@ export function ResultsPanel({
         {shown.length === 0 ? (
           <div className="flex flex-col items-center px-6 py-14 text-center">
             <ListFilter className="mb-3 size-5 text-faint" />
-            <p className="font-serif text-[17px] text-ink">Aucun hôtel ne correspond</p>
+            <p className="text-[17px] font-semibold tracking-[-0.02em] text-ink">Aucun hôtel ne correspond</p>
             <p className="mt-1 text-[11.5px] leading-relaxed text-muted">
               Élargissez le périmètre géographique ou retirez un critère.
             </p>

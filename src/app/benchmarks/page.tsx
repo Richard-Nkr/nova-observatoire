@@ -85,7 +85,7 @@ export default function BenchmarksPage() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <h2 className="font-serif text-[18px] leading-tight text-ink">{benchmark.nom}</h2>
+                        <h2 className="text-[18px] font-semibold leading-tight tracking-[-0.02em] text-ink">{benchmark.nom}</h2>
                         <Badge tone="navy">v{benchmark.version}</Badge>
                         <Badge tone="outline">{benchmark.annee}</Badge>
                         {benchmark.version > 1 && <Badge tone="accent">versionné</Badge>}
@@ -103,7 +103,7 @@ export default function BenchmarksPage() {
                     </div>
                     <div className="hidden shrink-0 text-right sm:block">
                       <p className="text-[8.5px] font-semibold uppercase tracking-[0.1em] text-faint">CA cumulé</p>
-                      <p className="mt-1 tabular font-serif text-[19px] text-ink">{overview.caTotal != null ? fmtEuro(overview.caTotal, true) : "—"}</p>
+                      <p className="mt-1 tabular text-[19px] font-semibold tracking-[-0.02em] text-ink">{overview.caTotal != null ? fmtEuro(overview.caTotal, true) : "—"}</p>
                       <p className="mt-0.5 text-[9.5px] text-faint">{overview.cles > 0 ? `${fmtInt(overview.cles)} clés` : "clés non renseignées"}</p>
                       <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-medium text-accent opacity-0 transition-opacity group-hover:opacity-100">
                         Ouvrir <ArrowUpRight className="size-3" />

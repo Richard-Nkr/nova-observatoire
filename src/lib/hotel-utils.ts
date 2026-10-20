@@ -167,6 +167,34 @@ export function zoneRevparMedian(
     : (values[middle - 1] + values[middle]) / 2;
 }
 
+/**
+ * CA médian par clé observé dans une région pour un exercice donné.
+ * Utilisé par l'estimateur de saisie manuelle : on extrapole un CA à partir
+ * de la productivité réellement documentée, jamais d'un RevPAR absent.
+ */
+export function zoneCaPerKeyMedian(
+  hotels: Hotel[],
+  kpis: KpiYear[],
+  region: string,
+  annee: number,
+): number | null {
+  const values = hotels
+    .filter((hotel) => hotel.region === region && hotel.cles > 0)
+    .map((hotel) => {
+      const kpi = kpis.find(
+        (item) => item.hotelId === hotel.id && item.annee === annee,
+      );
+      return kpi?.caTotal != null ? kpi.caTotal / hotel.cles : null;
+    })
+    .filter((value): value is number => value != null && value > 0)
+    .sort((a, b) => a - b);
+  if (!values.length) return null;
+  const middle = Math.floor(values.length / 2);
+  return values.length % 2
+    ? values[middle]
+    : (values[middle - 1] + values[middle]) / 2;
+}
+
 export function latestSourceFor(hotel: Hotel, kpis: KpiYear[]): SourceRef {
   return latestKpi(hotel.id, kpis)?.source ?? hotel.source;
 }

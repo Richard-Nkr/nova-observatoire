@@ -15,6 +15,7 @@ import {
   GitCompareArrows,
   Image as ImageIcon,
   Presentation,
+  Plus,
   SlidersHorizontal,
   Table2,
   Users,
@@ -56,9 +57,11 @@ import {
 } from "@/components/map/results-panel";
 import { SavedSelectionsDialog } from "@/components/map/saved-selections-dialog";
 import { ReliabilityBadge, DemoStamp } from "@/components/reliability";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { CategoryBadge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/field";
 import { StatTile } from "@/components/ui/misc";
+import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/components/ui/toast";
 
 const MAP_METRICS: { value: MapMetric; label: string }[] = [
@@ -123,6 +126,8 @@ export default function MapPage() {
   const [savedOpen, setSavedOpen] = React.useState(false);
   const [exportOpen, setExportOpen] = React.useState(false);
   const [exporting, setExporting] = React.useState<string | null>(null);
+  const [competitorRadius, setCompetitorRadius] = React.useState(15);
+  const [competitorSelection, setCompetitorSelection] = React.useState<string[]>([]);
   const mapRef = React.useRef<MapLibreMap | null>(null);
 
   const filteredHotels = React.useMemo(
@@ -168,6 +173,27 @@ export default function MapPage() {
     ? kpiFor(selectedHotel.id, state.kpis, filters.annee)
     : undefined;
 
+  // Concurrents de même catégorie dans le rayon choisi sur la fiche carte.
+  const competitors = React.useMemo(() => {
+    if (!selectedHotel) return [];
+    const family = categoryFamily(selectedHotel.categorie);
+    return state.hotels
+      .filter(
+        (candidate) =>
+          candidate.id !== selectedHotel.id &&
+          categoryFamily(candidate.categorie) === family,
+      )
+      .map((candidate) => ({
+        hotel: candidate,
+        distance: haversineKm(
+          { lat: selectedHotel.latitude, lng: selectedHotel.longitude },
+          { lat: candidate.latitude, lng: candidate.longitude },
+        ),
+      }))
+      .filter((candidate) => candidate.distance <= competitorRadius)
+      .sort((a, b) => a.distance - b.distance);
+  }, [selectedHotel, state.hotels, competitorRadius]);
+
   const filtersLines = React.useMemo(() => describeFilters(filters), [filters]);
   const title = scopeTitle(scope);
 
@@ -195,17 +221,49 @@ export default function MapPage() {
   };
 
   const handleRegionSelect = (region: string) => {
-    setScope({ level: "region", region });
-    setSelectedHotelId(null);
     setDrawing(false);
     setDrawingPoints([]);
+    setSelectedHotelId(null);
+
+    // Un clic sur une région déjà retenue la retire du périmètre.
+    if (filters.regions.includes(region)) {
+      const nextRegions = filters.regions.filter((item) => item !== region);
+      setFilters((current) => ({
+        ...current,
+        regions: nextRegions,
+        departements: [],
+        villes: [],
+        geo: null,
+      }));
+      if (nextRegions.length === 0) {
+        setScope({ level: "france" });
+      } else if (nextRegions.length === 1) {
+        setScope({ level: "region", region: nextRegions[0] });
+      } else {
+        // Plusieurs régions retenues : on garde la France entière à l'écran
+        // pour que tous les périmètres sélectionnés restent visibles.
+        setScope({ level: "france" });
+      }
+      toast({
+        title: "Région retirée",
+        description: `${region} ne fait plus partie du périmètre.`,
+        tone: "info",
+      });
+      return;
+    }
+
     setFilters((current) => ({
       ...current,
-      regions: [region],
+      regions: [...current.regions, region],
       departements: [],
       villes: [],
       geo: null,
     }));
+    setScope(
+      filters.regions.length > 0
+        ? { level: "france" }
+        : { level: "region", region },
+    );
   };
 
   const handleCitySelect = (city: string) => {
@@ -242,7 +300,9 @@ export default function MapPage() {
     setSelectedHotelId(null);
     setFilters((current) => ({
       ...current,
-      regions: [scope.region as string],
+      regions: current.regions.includes(scope.region as string)
+        ? current.regions
+        : [scope.region as string],
       departements: [],
       villes: [],
       geo: null,
@@ -261,11 +321,39 @@ export default function MapPage() {
   const selectHotel = (hotelId: string, focus = false) => {
     setSelectedHotelId(hotelId);
     const hotel = state.hotels.find((item) => item.id === hotelId);
-    if (focus && hotel && mapRef.current) {
+    if (!hotel) return;
+
+    // À l'ouverture d'une fiche, proposer par défaut les concurrents
+    // comparables situés dans le rayon courant.
+    const family = categoryFamily(hotel.categorie);
+    const initialRadius = 15;
+    const initialSelection = state.hotels
+      .filter(
+        (candidate) =>
+          candidate.id !== hotel.id && categoryFamily(candidate.categorie) === family,
+      )
+      .map((candidate) => ({
+        id: candidate.id,
+        distance: haversineKm(
+          { lat: hotel.latitude, lng: hotel.longitude },
+          { lat: candidate.latitude, lng: candidate.longitude },
+        ),
+      }))
+      .filter((candidate) => candidate.distance <= initialRadius)
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, 6)
+      .map((candidate) => candidate.id);
+    setCompetitorRadius(initialRadius);
+    setCompetitorSelection(initialSelection);
+
+    if (focus && mapRef.current) {
       mapRef.current.flyTo({
         center: [hotel.longitude, hotel.latitude],
         zoom: Math.max(mapRef.current.getZoom(), 12),
         duration: 550,
+        // Décale la cible vers la droite pour laisser respirer la fiche
+        // ouverte en bas à gauche de la carte.
+        padding: { top: 0, right: 0, bottom: 40, left: 380 },
       });
     }
   };
@@ -294,46 +382,76 @@ export default function MapPage() {
     setDrawingPoints([]);
   };
 
-  const openNearbyCompetitors = (hotel: Hotel) => {
-    const family = categoryFamily(hotel.categorie);
-    const candidates = state.hotels
-      .filter(
-        (candidate) =>
-          candidate.id !== hotel.id && categoryFamily(candidate.categorie) === family,
-      )
-      .map((candidate) => ({
-        hotel: candidate,
-        distance: haversineKm(
-          { lat: hotel.latitude, lng: hotel.longitude },
-          { lat: candidate.latitude, lng: candidate.longitude },
-        ),
-      }));
-    let radius = 15;
-    let nearby = candidates.filter((item) => item.distance <= radius);
-    if (nearby.length < 2) {
-      radius = 30;
-      nearby = candidates.filter((item) => item.distance <= radius);
+  const handleCompetitorRadius = (value: number) => {
+    setCompetitorRadius(value);
+    if (!selectedHotel) return;
+    const family = categoryFamily(selectedHotel.categorie);
+    const eligible = new Set(
+      state.hotels
+        .filter(
+          (candidate) =>
+            candidate.id !== selectedHotel.id &&
+            categoryFamily(candidate.categorie) === family &&
+            haversineKm(
+              { lat: selectedHotel.latitude, lng: selectedHotel.longitude },
+              { lat: candidate.latitude, lng: candidate.longitude },
+            ) <= value,
+        )
+        .map((candidate) => candidate.id),
+    );
+    setCompetitorSelection((current) => current.filter((id) => eligible.has(id)));
+  };
+
+  const toggleCompetitor = (hotelId: string) => {
+    setCompetitorSelection((current) => {
+      if (current.includes(hotelId)) {
+        return current.filter((id) => id !== hotelId);
+      }
+      if (current.length >= 29) {
+        toast({
+          title: "Sélection complète",
+          description: "Le comparateur accepte 30 acteurs au total, référence incluse.",
+          tone: "info",
+        });
+        return current;
+      }
+      return [...current, hotelId];
+    });
+  };
+
+  const selectAllCompetitors = () => {
+    const ids = competitors.slice(0, 29).map((item) => item.hotel.id);
+    setCompetitorSelection(ids);
+    if (competitors.length > 29) {
+      toast({
+        title: "29 concurrents retenus",
+        description: "Le comparateur est limité à 30 acteurs au total.",
+        tone: "info",
+      });
     }
-    nearby.sort((a, b) => a.distance - b.distance);
-    const ids = [hotel.id, ...nearby.slice(0, 29).map((item) => item.hotel.id)];
+  };
+
+  const prepareCompetitorComparison = () => {
+    if (!selectedHotel) return;
+    const ids = [selectedHotel.id, ...competitorSelection].slice(0, 30);
     if (ids.length < 2) {
       toast({
-        title: "Pas assez de concurrents",
-        description: "Aucun hôtel de catégorie comparable dans un rayon de 30 km.",
-        tone: "error",
+        title: "Sélectionnez au moins un concurrent",
+        description: "Cochez un ou plusieurs hôtels dans le rayon choisi.",
+        tone: "info",
       });
       return;
     }
     setBasket(ids);
-    setReference(hotel.id);
+    setReference(selectedHotel.id);
     addAudit({
       action: "Sélection de concurrents autour",
-      target: hotel.nom,
-      details: `${ids.length} hôtels · rayon ${radius} km · catégorie ${CATEGORY_LABEL[String(hotel.categorie)]}`,
+      target: selectedHotel.nom,
+      details: `${ids.length} hôtels · rayon ${competitorRadius} km · catégorie ${CATEGORY_LABEL[String(selectedHotel.categorie)]}`,
     });
     toast({
       title: "Panel de concurrents préparé",
-      description: `${ids.length} hôtels · ${radius} km autour de ${hotel.nom}`,
+      description: `${ids.length} hôtels · ${competitorRadius} km autour de ${selectedHotel.nom}`,
       tone: "success",
     });
     router.push("/comparateur");
@@ -516,8 +634,8 @@ export default function MapPage() {
               <span className="tabular">{filteredHotels.length} hôtels</span>
               <DemoStamp className="ml-1 hidden sm:inline-flex" />
             </div>
-            <div className="mt-0.5 flex items-baseline gap-2">
-              <h1 className="font-serif text-[22px] leading-none tracking-[-0.01em] text-ink">
+            <div className="mt-1 flex items-baseline gap-2">
+              <h1 className="text-[23px] font-semibold leading-none tracking-[-0.03em] text-ink">
                 Carte &amp; recherche
               </h1>
               <p className="hidden text-[10px] text-faint sm:block">
@@ -536,6 +654,13 @@ export default function MapPage() {
               <Bookmark className="size-3.5" />
               <span className="hidden lg:inline">Sélections</span>
             </Button>
+            <Link
+              href="/hotels/nouveau"
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }), "hidden sm:inline-flex")}
+            >
+              <Plus className="size-3.5" />
+              <span className="hidden xl:inline">Ajouter</span>
+            </Link>
             <Popover.Root open={exportOpen} onOpenChange={setExportOpen}>
               <Popover.Trigger asChild>
                 <Button variant="outline" size="sm" disabled={!!exporting}>
@@ -685,6 +810,7 @@ export default function MapPage() {
             metric={metric}
             scope={scope}
             geo={filters.geo}
+            selectedRegions={filters.regions}
             selectedHotelId={selectedHotelId}
             drawing={drawing}
             drawingPoints={drawingPoints}
@@ -777,49 +903,50 @@ export default function MapPage() {
               )}
               <p className="mt-1.5 border-t border-line/80 pt-1 text-[8.5px] text-faint">
                 {scope.level === "region"
-                  ? "Cliquez une ville pour explorer ses hôtels"
-                  : "Cliquez une région pour zoomer"}
+                  ? "Cliquez une ville pour explorer · recliquez la région pour la retirer"
+                  : "Cliquez une région pour l’ajouter ou la retirer"}
               </p>
             </div>
           )}
 
-          {/* Fiche sélectionnée */}
+          {/* Fiche sélectionnée ------------------------------------------- */}
           {selectedHotel && (
-            <div className="slide-in-right absolute bottom-3 left-3 z-20 w-[336px] max-w-[calc(100%-1.5rem)] overflow-hidden rounded-[3px] border border-line-strong bg-surface shadow-[0_14px_44px_rgba(15,36,51,0.22)]">
+            <div className="slide-in-right absolute bottom-3 left-3 z-20 max-h-[calc(100%-1.5rem)] w-[360px] max-w-[calc(100%-1.5rem)] overflow-y-auto scroll-thin rounded-xl border border-line bg-surface shadow-[0_18px_54px_rgba(15,31,58,0.18)]">
               <div
                 className="h-[3px] w-full"
                 style={{ background: CATEGORY_COLOR[String(selectedHotel.categorie)] }}
               />
-              <div className="p-3">
+              <div className="p-3.5">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="truncate font-serif text-[18px] leading-tight text-ink">
+                    <p className="truncate text-[18px] font-semibold leading-tight tracking-[-0.025em] text-ink">
                       {selectedHotel.nom}
                     </p>
-                    <p className="mt-0.5 text-[10.5px] text-muted">
-                      {selectedHotel.adresse} · {selectedHotel.codePostal}{" "}
-                      {selectedHotel.ville}
+                    <p className="mt-1 truncate text-[10.5px] text-muted">
+                      {[selectedHotel.adresse, [selectedHotel.codePostal, selectedHotel.ville].filter(Boolean).join(" ")]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setSelectedHotelId(null)}
-                    className="rounded p-1 text-faint hover:bg-black/5 hover:text-ink"
+                    className="rounded-full p-1 text-faint hover:bg-paper hover:text-ink"
                     aria-label="Fermer la fiche"
                   >
-                    <span className="text-[16px] leading-none">×</span>
+                    <span className="text-[17px] leading-none">×</span>
                   </button>
                 </div>
                 <div className="mt-1.5 flex items-center gap-1.5">
                   <CategoryBadge categorie={selectedHotel.categorie} />
-                  <span className="text-[10.5px] text-muted">{selectedHotel.groupe}</span>
+                  <span className="truncate text-[10.5px] text-muted">{selectedHotel.groupe}</span>
                   <span className="text-[10.5px] text-faint">·</span>
                   <span className="text-[10.5px] text-muted">
                     {fmtInt(selectedHotel.cles)} clés
                   </span>
                   {selectedKpi && <ReliabilityBadge source={selectedKpi.source} />}
                 </div>
-                <div className="mt-2.5 grid grid-cols-3 gap-2 rounded-[2px] border border-line bg-paper/60 px-2 py-1.5">
+                <div className="mt-3 grid grid-cols-3 gap-2 rounded-lg border border-line bg-paper/60 px-2.5 py-2">
                   <MiniKpi label="CA total" value={selectedKpi?.caTotal != null ? selectedKpi.caTotal / 1_000_000 : null} suffix=" M€" digits={2} />
                   <MiniKpi
                     label="CA / clé"
@@ -828,26 +955,117 @@ export default function MapPage() {
                   />
                   <MiniKpi label="Clés" value={selectedHotel.cles} suffix="" digits={0} />
                 </div>
-                <div className="mt-3 flex gap-1.5">
-                  <Link
-                    href={`/hotels/${selectedHotel.id}`}
-                    className="inline-flex h-7 flex-1 items-center justify-center gap-1.5 rounded-[3px] border border-line-strong bg-surface px-2.5 text-[11px] font-medium text-ink transition-colors hover:bg-white"
-                  >
-                    <FileText className="size-3.5" />
-                    Ouvrir la fiche
-                  </Link>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    className="flex-1 text-[11px]"
-                    onClick={() => openNearbyCompetitors(selectedHotel)}
-                  >
-                    <Users className="size-3.5" />
-                    Concurrents autour
-                  </Button>
+
+                {/* Sélection des concurrents autour de l'hôtel */}
+                <div className="mt-3.5 border-t border-line pt-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-[9.5px] font-semibold uppercase tracking-[0.1em] text-ink-soft">
+                      Concurrents comparables
+                    </p>
+                    <span className="rounded-full bg-accent-soft px-2 py-[1px] text-[10px] font-semibold tabular text-accent-strong">
+                      {competitorRadius} km
+                    </span>
+                  </div>
+                  <Slider
+                    value={competitorRadius}
+                    onChange={handleCompetitorRadius}
+                    min={1}
+                    max={100}
+                    step={1}
+                    className="mt-2.5"
+                    aria-label="Rayon de recherche des concurrents"
+                  />
+                  <div className="mt-1.5 flex items-center justify-between text-[9px] text-faint">
+                    <span>1 km</span>
+                    <span className="tabular">
+                      {competitors.length} hôtel(s) dans le rayon
+                    </span>
+                    <span>100 km</span>
+                  </div>
+                  <p className="mt-1 text-[9px] leading-snug text-faint">
+                    Distances calculées depuis les centroïdes communaux BAN.
+                  </p>
+
+                  {competitors.length > 0 ? (
+                    <div className="scroll-thin mt-2 max-h-[148px] space-y-0.5 overflow-y-auto rounded-lg border border-line bg-paper/45 p-1">
+                      {competitors.map(({ hotel: competitor, distance }) => (
+                        <Checkbox
+                          key={competitor.id}
+                          checked={competitorSelection.includes(competitor.id)}
+                          onChange={() => toggleCompetitor(competitor.id)}
+                          className="w-full items-start gap-2 rounded-md px-1.5 py-1 hover:bg-surface"
+                          label={
+                            <span className="flex min-w-0 flex-1 items-baseline justify-between gap-2">
+                              <span className="min-w-0">
+                                <span className="block truncate text-[10.5px] font-medium text-ink">
+                                  {competitor.nom}
+                                </span>
+                                <span className="block truncate text-[9px] text-muted">
+                                  {competitor.ville} · {CATEGORY_LABEL[String(competitor.categorie)]}
+                                </span>
+                              </span>
+                              <span className="shrink-0 text-[9px] tabular text-faint">
+                                {fmtNum(distance, 1)} km · {fmtInt(competitor.cles)} clés
+                              </span>
+                            </span>
+                          }
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-2 rounded-lg border border-dashed border-line-strong px-3 py-2 text-[10px] leading-relaxed text-faint">
+                      Aucun hôtel de catégorie comparable dans ce rayon. Augmentez le rayon pour élargir la recherche.
+                    </p>
+                  )}
+
+                  <div className="mt-1.5 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-[9.5px]">
+                      <button
+                        type="button"
+                        onClick={selectAllCompetitors}
+                        disabled={competitors.length === 0}
+                        className="font-medium text-accent hover:underline disabled:opacity-40"
+                      >
+                        Tout
+                      </button>
+                      <span className="text-faint">·</span>
+                      <button
+                        type="button"
+                        onClick={() => setCompetitorSelection([])}
+                        disabled={competitorSelection.length === 0}
+                        className="font-medium text-muted hover:text-ink hover:underline disabled:opacity-40"
+                      >
+                        Aucun
+                      </button>
+                    </div>
+                    <span className="text-[9.5px] tabular text-muted">
+                      {competitorSelection.length} retenu(s)
+                    </span>
+                  </div>
+
+                  <div className="mt-2 flex gap-1.5">
+                    <Link
+                      href={`/hotels/${selectedHotel.id}`}
+                      className={cn(buttonVariants({ variant: "outline", size: "sm" }), "flex-1")}
+                    >
+                      <FileText className="size-3.5" />
+                      Fiche
+                    </Link>
+                    <Button
+                      variant="accent"
+                      size="sm"
+                      className="flex-1"
+                      onClick={prepareCompetitorComparison}
+                      disabled={competitorSelection.length === 0}
+                    >
+                      <Users className="size-3.5" />
+                      Comparer · {competitorSelection.length + 1}
+                    </Button>
+                  </div>
                 </div>
+
                 {selectedKpi && (
-                  <p className="mt-1.5 truncate text-[9px] text-faint">
+                  <p className="mt-2 truncate text-[9px] text-faint">
                     {selectedKpi.source.source} · {fmtDate(selectedKpi.source.dateSource)}
                   </p>
                 )}

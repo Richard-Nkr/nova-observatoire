@@ -207,7 +207,7 @@ export default function HotelDetailPage() {
                   )}
                   {hotel.demo && <DemoStamp />}
                 </div>
-                <h1 className="mt-1.5 font-serif text-[32px] leading-tight tracking-[-0.02em] text-ink">
+                <h1 className="mt-1.5 text-[32px] font-semibold leading-tight tracking-[-0.035em] text-ink">
                   {hotel.nom}
                 </h1>
                 <p className="mt-1 flex flex-wrap items-center gap-1.5 text-[12px] text-muted">
@@ -735,7 +735,7 @@ function MetricCell({
       </div>
       <p
         className={cn(
-          "mt-0.5 font-serif text-[19px] leading-tight tabular text-ink",
+          "mt-0.5 text-[19px] font-semibold leading-tight tracking-[-0.02em] tabular text-ink",
           source?.fiabilite === "N3" && "italic font-normal text-grey",
         )}
       >

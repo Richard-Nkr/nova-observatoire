@@ -293,7 +293,7 @@ export function ReferenceGapLine({ columns }: { columns: ComparisonColumn[] }) {
       >
         Position de la référence
       </SectionTitle>
-      <p className="font-serif text-[30px] leading-none text-ink">{percentile}<span className="text-[15px] text-muted">e percentile</span></p>
+      <p className="text-[30px] font-semibold leading-none tracking-[-0.035em] text-ink">{percentile}<span className="text-[15px] text-muted">e percentile</span></p>
       <p className="mt-1 text-[11.5px] text-muted">
         {below} concurrent(s) sur {values.length} affichent une valeur inférieure pour {KPI_LABELS[metric].short.toLowerCase()}.
       </p>

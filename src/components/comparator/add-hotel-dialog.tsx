@@ -94,7 +94,7 @@ export function AddHotelDialog({
           {results.length === 0 ? (
             <div className="flex flex-col items-center gap-2 px-5 py-12 text-center">
               <Search className="size-5 text-faint" />
-              <p className="font-serif text-[17px] text-ink">Aucun hôtel trouvé</p>
+              <p className="text-[17px] font-semibold tracking-[-0.02em] text-ink">Aucun hôtel trouvé</p>
               <p className="text-[11.5px] text-muted">Élargissez la recherche ou changez de région.</p>
             </div>
           ) : (

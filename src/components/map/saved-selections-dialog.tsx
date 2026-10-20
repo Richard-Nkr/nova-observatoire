@@ -120,7 +120,7 @@ export function SavedSelectionsDialog({
           ) : state.savedSelections.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Bookmark className="mb-3 size-5 text-faint" />
-              <p className="font-serif text-[18px] text-ink">Aucune sélection enregistrée</p>
+              <p className="text-[18px] font-semibold tracking-[-0.02em] text-ink">Aucune sélection enregistrée</p>
               <p className="mt-1 max-w-sm text-[11.5px] leading-relaxed text-muted">
                 Enregistrez vos filtres pour réouvrir un cadrage en un clic ou le partager
                 avec un associé.

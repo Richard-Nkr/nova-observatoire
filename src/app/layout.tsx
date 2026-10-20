@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
-import { Inter, Michroma, Newsreader } from "next/font/google";
+import { Inter, Michroma } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { AppShell } from "@/components/app-shell";
@@ -9,13 +9,6 @@ const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
-});
-
-const newsreader = Newsreader({
-  variable: "--font-newsreader",
-  subsets: ["latin"],
-  display: "swap",
-  style: ["normal", "italic"],
 });
 
 const michroma = Michroma({
@@ -46,7 +39,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="fr"
-      className={`${inter.variable} ${newsreader.variable} ${michroma.variable} h-full`}
+      className={`${inter.variable} ${michroma.variable} h-full`}
     >
       <body className="h-full antialiased">
         <Providers>

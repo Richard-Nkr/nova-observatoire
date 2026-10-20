@@ -63,19 +63,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isMap = pathname === "/";
   const basketCount = state.basket.length;
 
-  const nav = (light = false) => (
-    <nav className="flex-1 overflow-y-auto scroll-thin px-3 pb-4 pt-5">
+  const nav = () => (
+    <nav className="flex-1 overflow-y-auto scroll-thin px-3 pb-5 pt-2">
       {navGroups.map((group) => (
-        <div key={group.label} className="mb-4">
-          <p
-            className={cn(
-              "mb-1.5 px-2 text-[8.5px] font-semibold uppercase tracking-[0.18em]",
-              light ? "text-white/55" : "text-white/35",
-            )}
-          >
+        <div key={group.label} className="mb-5">
+          <p className="mb-2 px-2.5 font-logo text-[7.5px] uppercase tracking-[0.16em] text-faint">
             {group.label}
           </p>
-          <ul className="space-y-[2px]">
+          <ul className="space-y-[3px]">
             {group.items
               .filter((item) => item.href !== "/admin" || currentUser.role === "Admin")
               .map((item) => {
@@ -89,23 +84,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     <Link
                       href={item.href}
                       className={cn(
-                        "group flex items-center gap-2.5 rounded-[2px] px-2 py-[7px] text-[12px] transition-colors",
+                        "group flex items-center gap-2.5 rounded-lg px-2.5 py-[8px] text-[12px] transition-colors",
                         active
-                          ? "bg-white/[0.09] text-white"
-                          : "text-white/62 hover:bg-white/[0.05] hover:text-white/90",
+                          ? "bg-[#edf2f8] font-semibold text-ink"
+                          : "text-ink-soft hover:bg-paper hover:text-ink",
                       )}
                     >
                       <span
                         className={cn(
                           "flex size-4 items-center justify-center",
-                          active ? "text-[#d3a07e]" : "text-white/45 group-hover:text-white/70",
+                          active ? "text-accent" : "text-muted group-hover:text-ink",
                         )}
                       >
-                        <Icon className="size-[15px]" strokeWidth={1.7} />
+                        <Icon className="size-[15px]" strokeWidth={1.8} />
                       </span>
                       <span className="flex-1 truncate">{item.label}</span>
                       {"badge" in item && item.badge === "basket" && basketCount > 0 && (
-                        <span className="rounded-[2px] bg-[#c9916b] px-1 py-[1px] text-[9px] font-semibold tabular text-navy">
+                        <span className="rounded-full bg-accent px-1.5 py-[1px] text-[9px] font-semibold tabular text-white">
                           {basketCount}
                         </span>
                       )}
@@ -120,15 +115,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
 
   const footer = (
-    <div className="border-t border-white/[0.09] px-3 py-3">
-      <div className="mb-2.5 rounded-[2px] border border-white/[0.09] bg-white/[0.035] px-2 py-1.5">
+    <div className="border-t border-line px-3 py-3">
+      <div className="mb-2.5 rounded-xl border border-line bg-paper px-3 py-2.5">
         <div className="flex items-center justify-between">
-          <span className="text-[8.5px] font-semibold uppercase tracking-[0.12em] text-[#d3a07e]">
+          <span className="font-logo text-[7.5px] uppercase tracking-[0.12em] text-accent">
             Base compilée
           </span>
-          <span className="size-1.5 rounded-full bg-[#c9916b]" />
+          <span className="size-1.5 rounded-full bg-accent" />
         </div>
-        <p className="mt-0.5 text-[10px] leading-tight text-white/45">
+        <p className="mt-1 text-[10px] leading-tight text-muted">
           {fmtInt(state.hotels.length)} hôtels · {state.hotels.length ? new Set(state.hotels.map((h) => h.region)).size : 0} régions
         </p>
       </div>
@@ -137,19 +132,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <DropdownMenu.Trigger asChild>
           <button
             type="button"
-            className="flex w-full items-center gap-2 rounded-[2px] px-1 py-1 text-left transition-colors hover:bg-white/[0.05]"
+            className="flex w-full items-center gap-2 rounded-lg px-1.5 py-1.5 text-left transition-colors hover:bg-paper"
           >
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/[0.08] text-[10px] font-semibold text-white/85">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-navy text-[10px] font-semibold text-white">
               {currentUser?.initiales ?? "—"}
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-[11.5px] font-medium text-white/90">
+              <span className="block truncate text-[11.5px] font-medium text-ink">
                 {currentUser?.nom}
               </span>
-              <span className="block text-[9.5px] text-white/40">{currentUser?.role}</span>
+              <span className="block text-[9.5px] text-muted">{currentUser?.role}</span>
             </span>
             {currentUser?.accesConfidentiel && (
-              <ShieldCheck className="size-3.5 text-[#d3a07e]" aria-label="Accès confidentiel" />
+              <ShieldCheck className="size-3.5 text-accent" aria-label="Accès confidentiel" />
             )}
           </button>
         </DropdownMenu.Trigger>
@@ -158,9 +153,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             side="right"
             align="end"
             sideOffset={8}
-            className="z-[90] w-60 rounded-[3px] border border-line-strong bg-surface p-1 shadow-[0_12px_40px_rgba(15,36,51,0.22)]"
+            className="z-[90] w-60 rounded-xl border border-line bg-surface p-1.5 shadow-[0_18px_50px_rgba(15,31,58,0.16)]"
           >
-            <DropdownMenu.Label className="px-2 py-1.5 text-[9px] font-semibold uppercase tracking-[0.1em] text-muted">
+            <DropdownMenu.Label className="px-2 py-1.5 font-logo text-[7px] uppercase tracking-[0.14em] text-faint">
               Changer d’utilisateur
             </DropdownMenu.Label>
             {state.users
@@ -169,9 +164,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <DropdownMenu.Item
                   key={user.id}
                   onSelect={() => setCurrentUser(user.id)}
-                  className="flex cursor-pointer items-center gap-2 rounded-[2px] px-2 py-1.5 text-[11.5px] text-ink-soft outline-none hover:bg-black/[0.045]"
+                  className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-[11.5px] text-ink-soft outline-none hover:bg-paper"
                 >
-                  <span className="flex size-6 items-center justify-center rounded-full bg-black/[0.06] text-[9px] font-semibold">
+                  <span className="flex size-6 items-center justify-center rounded-full bg-paper text-[9px] font-semibold text-ink">
                     {user.initiales}
                   </span>
                   <span className="flex-1">
@@ -184,7 +179,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <DropdownMenu.Separator className="my-1 h-px bg-line" />
             <DropdownMenu.Item
               onSelect={resetDemo}
-              className="flex cursor-pointer items-center gap-2 rounded-[2px] px-2 py-1.5 text-[11px] text-muted outline-none hover:bg-black/[0.045]"
+              className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] text-muted outline-none hover:bg-paper"
             >
               <LogOut className="size-3.5" />
               Réinitialiser la base
@@ -197,25 +192,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden lg:flex-row">
-      <aside className="hidden h-full w-[228px] shrink-0 flex-col bg-navy lg:flex">
-        <div className="border-b border-white/[0.08] px-5 py-5">
+      <aside className="hidden h-full w-[248px] shrink-0 flex-col border-r border-line bg-surface lg:flex">
+        <div className="px-5 pb-5 pt-6">
           <Link href="/" aria-label="Nova Observatoire — accueil">
-            <Logo variant="light" />
+            <Logo />
           </Link>
+          <p className="mt-5 flex items-center gap-1.5 pl-[11px] text-[9px] font-medium uppercase tracking-[0.1em] text-faint">
+            <span className="size-1.5 rounded-full bg-accent" />
+            Observatoire hôtelier
+          </p>
         </div>
         {nav()}
         {footer}
       </aside>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <header className="flex h-12 shrink-0 items-center justify-between border-b border-line bg-surface px-4 lg:hidden">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-line bg-surface px-4 lg:hidden">
           <Link href="/" aria-label="Nova Observatoire — accueil">
             <Logo compact />
           </Link>
           <button
             type="button"
             onClick={() => setMobileOpen(true)}
-            className="rounded p-2 text-ink-soft hover:bg-black/5"
+            className="rounded-full p-2 text-ink-soft hover:bg-paper"
             aria-label="Ouvrir le menu"
           >
             <Menu className="size-5" />
@@ -231,27 +230,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {isMap ? (
             <div className="h-full">{children}</div>
           ) : (
-            <div className="mx-auto w-full max-w-[1580px] px-4 py-5 sm:px-6 xl:px-8">{children}</div>
+            <div className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 xl:px-10">{children}</div>
           )}
         </main>
       </div>
 
       {mobileOpen && (
         <div className="fixed inset-0 z-[95] flex lg:hidden">
-          <div className="absolute inset-0 bg-navy/45" onClick={() => setMobileOpen(false)} />
-          <aside className="relative flex h-full w-[268px] flex-col bg-navy shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/[0.08] px-5 py-4">
-              <Logo variant="light" />
+          <div className="absolute inset-0 bg-navy/30 backdrop-blur-[2px]" onClick={() => setMobileOpen(false)} />
+          <aside className="slide-in-right relative flex h-full w-[280px] flex-col border-r border-line bg-surface shadow-2xl">
+            <div className="flex items-center justify-between px-5 pb-4 pt-5">
+              <Logo />
               <button
                 type="button"
                 onClick={() => setMobileOpen(false)}
                 aria-label="Fermer le menu"
-                className="rounded p-1 text-white/60 hover:bg-white/10 hover:text-white"
+                className="rounded-full p-1.5 text-muted hover:bg-paper hover:text-ink"
               >
                 <X className="size-4.5" />
               </button>
             </div>
-            {nav(true)}
+            {nav()}
             {footer}
           </aside>
         </div>

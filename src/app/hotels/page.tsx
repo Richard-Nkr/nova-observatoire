@@ -9,6 +9,7 @@ import {
   Download,
   GitCompareArrows,
   MapPin,
+  Plus,
   Search,
   SlidersHorizontal,
 } from "lucide-react";
@@ -27,7 +28,7 @@ import { exportHotelsXlsx } from "@/lib/exports";
 import { cn } from "@/lib/utils";
 import { DemoStamp, ReliabilityBadge } from "@/components/reliability";
 import { CategoryBadge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Checkbox, SearchInput, Select } from "@/components/ui/field";
 import { Card, PageHeader, StatTile } from "@/components/ui/misc";
 import { TableShell, Td, Th } from "@/components/ui/table";
@@ -137,6 +138,13 @@ export default function HotelsPage() {
         description="Le répertoire central de l’observatoire : les actifs de la base compilée, filtrables et exportables avec leurs sources."
         actions={
           <>
+            <Link
+              href="/hotels/nouveau"
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            >
+              <Plus className="size-3.5" />
+              Ajouter un hôtel
+            </Link>
             <Button variant="outline" size="sm" onClick={exportExcel}>
               <Download className="size-3.5" />
               Exporter Excel
@@ -262,7 +270,7 @@ export default function HotelsPage() {
         {sorted.length === 0 ? (
           <div className="px-6 py-14 text-center">
             <Building2 className="mx-auto mb-2 size-6 text-faint" />
-            <p className="font-serif text-[19px] text-ink">Aucun hôtel ne correspond</p>
+            <p className="text-[19px] font-semibold tracking-[-0.02em] text-ink">Aucun hôtel ne correspond</p>
             <p className="mt-1 text-[12px] text-muted">Élargissez la recherche ou réinitialisez les filtres.</p>
             <Button variant="outline" size="sm" className="mt-3" onClick={reset}>
               Réinitialiser les filtres

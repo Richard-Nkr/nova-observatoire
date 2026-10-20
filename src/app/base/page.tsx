@@ -164,7 +164,7 @@ export default function BasePage() {
           <div className="flex items-center gap-2 text-[9.5px] font-semibold uppercase tracking-[0.14em] text-white/45">
             <Database className="size-3.5" /> Table pivot
           </div>
-          <h2 className="mt-2 font-serif text-2xl">BDD Hôtel</h2>
+          <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em]">BDD Hôtel</h2>
           <p className="mt-1 text-[11px] leading-relaxed text-white/65">
             Chaque actif est identifié une seule fois puis relié aux observations d’identité, d’exploitation, de
             transaction, de prix, de MICE et de valorisation.
@@ -172,11 +172,11 @@ export default function BasePage() {
           <div className="mt-5 grid grid-cols-2 gap-3 border-t border-white/12 pt-4">
             <div>
               <div className="text-[9px] uppercase tracking-[0.1em] text-white/40">Actifs</div>
-              <div className="font-serif text-2xl">{fmtInt(state.hotels.length)}</div>
+              <div className="text-2xl font-semibold tracking-[-0.03em]">{fmtInt(state.hotels.length)}</div>
             </div>
             <div>
               <div className="text-[9px] uppercase tracking-[0.1em] text-white/40">Régions</div>
-              <div className="font-serif text-2xl">{new Set(state.hotels.map((hotel) => hotel.region)).size}</div>
+              <div className="text-2xl font-semibold tracking-[-0.03em]">{new Set(state.hotels.map((hotel) => hotel.region)).size}</div>
             </div>
           </div>
           <Link

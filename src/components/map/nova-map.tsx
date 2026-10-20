@@ -118,6 +118,7 @@ export interface NovaMapProps {
   metric: MapMetric;
   scope: MapScope;
   geo: Filters["geo"];
+  selectedRegions?: string[];
   selectedHotelId?: string | null;
   drawing?: boolean;
   drawingPoints?: { lat: number; lng: number }[];
@@ -141,6 +142,7 @@ export function NovaMap({
   metric,
   scope,
   geo,
+  selectedRegions = [],
   selectedHotelId,
   drawing = false,
   drawingPoints = [],
@@ -245,6 +247,27 @@ export function NovaMap({
     [visibleHotels, selectedHotelId],
   );
 
+  // Marqueur dédié à l'hôtel sélectionné : visible même lorsque les autres
+  // points sont regroupés ou masqués par le niveau de zoom.
+  const selectedFeature = React.useMemo(() => {
+    const hotel = hotels.find((item) => item.id === selectedHotelId);
+    return {
+      type: "FeatureCollection" as const,
+      features: hotel
+        ? [
+            {
+              type: "Feature" as const,
+              geometry: {
+                type: "Point" as const,
+                coordinates: [hotel.longitude, hotel.latitude],
+              },
+              properties: { nom: hotel.nom },
+            },
+          ]
+        : [],
+    };
+  }, [hotels, selectedHotelId]);
+
   const geoFeature = React.useMemo(() => {
     if (!geo) return null;
     if (geo.type === "circle") {
@@ -347,6 +370,10 @@ export function NovaMap({
       clusterRadius: 42,
       clusterMaxZoom: 13,
     });
+    map.addSource("nova-selected-hotel", {
+      type: "geojson",
+      data: selectedFeature,
+    });
     map.addSource("nova-geo", {
       type: "geojson",
       data: geoFeature ?? { type: "FeatureCollection", features: [] },
@@ -367,8 +394,8 @@ export function NovaMap({
       type: "line",
       source: "nova-regions",
       paint: {
-        "line-color": "#bcb4a6",
-        "line-width": ["case", ["get", "selected"], 2, 0.7],
+        "line-color": ["case", ["==", ["get", "selected"], 1], "#c15f2f", "#b9c3d2"],
+        "line-width": ["case", ["==", ["get", "selected"], 1], 2, 0.8],
       },
     });
     map.addLayer({
@@ -450,6 +477,27 @@ export function NovaMap({
         "circle-stroke-color": ["case", ["get", "selected"], "#a8653f", "#fffefa"],
         "circle-stroke-width": ["case", ["get", "selected"], 2.5, 1.3],
         "circle-opacity": 0.94,
+      },
+    });
+    map.addLayer({
+      id: "nova-selected-halo",
+      type: "circle",
+      source: "nova-selected-hotel",
+      paint: {
+        "circle-radius": 18,
+        "circle-color": "#c15f2f",
+        "circle-opacity": 0.16,
+      },
+    });
+    map.addLayer({
+      id: "nova-selected-point",
+      type: "circle",
+      source: "nova-selected-hotel",
+      paint: {
+        "circle-radius": 6,
+        "circle-color": "#c15f2f",
+        "circle-stroke-color": "#ffffff",
+        "circle-stroke-width": 2.2,
       },
     });
     map.addLayer({
@@ -620,7 +668,13 @@ export function NovaMap({
             properties: {
               ...feature.properties,
               fillColor: value === null ? REGION_EMPTY : mixColor(REGION_LOW, REGION_HIGH, ratio),
-              selected: scope.level !== "france" && scope.region === nom ? 1 : 0,
+              selected: selectedRegions.length
+                ? selectedRegions.includes(nom)
+                  ? 1
+                  : 0
+                : scope.level !== "france" && scope.region === nom
+                  ? 1
+                  : 0,
             },
           };
         }),
@@ -635,6 +689,9 @@ export function NovaMap({
     );
     (map.getSource("nova-hotels") as GeoJSONSource | undefined)?.setData(
       hotelFeatures,
+    );
+    (map.getSource("nova-selected-hotel") as GeoJSONSource | undefined)?.setData(
+      selectedFeature,
     );
     (map.getSource("nova-geo") as GeoJSONSource | undefined)?.setData(
       (geoFeature ?? { type: "FeatureCollection", features: [] }) as GeoJSON.FeatureCollection,
@@ -654,23 +711,39 @@ export function NovaMap({
       map.setLayoutProperty("nova-hotel-points", "visibility", showHotels ? "visible" : "none");
     }
     if (map.getLayer("nova-region-fill")) {
+      // Le choroplèthe ne doit pas masquer le fond de carte lorsqu'on zoome
+      // sur une ville ou un hôtel : son opacité s'efface avec le zoom.
       map.setPaintProperty(
         "nova-region-fill",
         "fill-opacity",
-        scope.level === "france" ? 1 : 0.62,
+        [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          6,
+          scope.level === "france" ? 0.96 : 0.62,
+          9,
+          scope.level === "france" ? 0.5 : 0.28,
+          11,
+          0,
+        ],
       );
     }
     if (map.getLayer("nova-region-line")) {
-      map.setPaintProperty(
-        "nova-region-line",
-        "line-width",
-        scope.level === "france" ? 0.7 : 1,
-      );
+      map.setPaintProperty("nova-region-line", "line-width", [
+        "case",
+        ["==", ["get", "selected"], 1],
+        2,
+        0.8,
+      ]);
+      map.setPaintProperty("nova-region-line", "line-color", [
+        "case",
+        ["==", ["get", "selected"], 1],
+        "#c15f2f",
+        "#b9c3d2",
+      ]);
     }
-    if (map.getLayer("nova-region-line")) {
-      map.setPaintProperty("nova-region-line", "line-color", "#bcb4a6");
-    }
-  }, [ready, regionData, metric, scope, cityFeatures, hotelFeatures, geoFeature, regionGeo, geo]);
+  }, [ready, regionData, metric, scope, selectedRegions, cityFeatures, hotelFeatures, selectedFeature, geoFeature, regionGeo, geo]);
 
   // --- Aperçu du polygone en cours de dessin --------------------------------
   React.useEffect(() => {

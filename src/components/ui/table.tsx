@@ -36,7 +36,7 @@ export function Th({
   return (
     <th
       className={cn(
-        "sticky top-0 z-10 whitespace-nowrap border-b border-line bg-[#f7f5ef] px-2 py-2 text-[9.5px] font-semibold uppercase tracking-[0.07em] text-muted",
+        "sticky top-0 z-10 whitespace-nowrap border-b border-line bg-[#f7f9fc] px-2.5 py-2.5 text-[9.5px] font-semibold uppercase tracking-[0.08em] text-muted",
         align === "right" && "text-right",
         align === "center" && "text-center",
         className,
@@ -94,7 +94,7 @@ export function Td({
       onClick={onClick}
       style={style}
       className={cn(
-        "border-b border-line/70 px-2 py-[7px] align-middle text-ink-soft",
+        "border-b border-line/70 px-2.5 py-2 align-middle text-ink-soft",
         align === "right" && "text-right tabular",
         align === "center" && "text-center",
         className,

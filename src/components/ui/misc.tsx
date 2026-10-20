@@ -13,7 +13,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-[3px] border border-line bg-surface shadow-[0_1px_0_rgba(23,32,41,0.03)]",
+        "rounded-[10px] border border-line bg-surface shadow-[0_1px_2px_rgba(15,31,58,0.04)]",
         padded && "p-4",
         className,
       )}
@@ -39,24 +39,29 @@ export function PageHeader({
   className?: string;
 }) {
   return (
-    <div className={cn("flex flex-wrap items-end justify-between gap-4", className)}>
+    <div className={cn("flex flex-wrap items-end justify-between gap-5", className)}>
       <div className="min-w-0">
         {breadcrumb}
-        {eyebrow && (
-          <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
-            {eyebrow}
-          </p>
-        )}
-        <h1 className="font-serif text-[30px] font-normal leading-[1.08] tracking-[-0.015em] text-ink">
-          {title}
-        </h1>
-        {description && (
-          <p className="mt-1.5 max-w-3xl text-[12.5px] leading-relaxed text-muted">
-            {description}
-          </p>
-        )}
+        <div className="flex items-start gap-3.5">
+          <span aria-hidden className="mt-[9px] h-7 w-[2px] shrink-0 rounded-full bg-accent" />
+          <div className="min-w-0">
+            {eyebrow && (
+              <p className="mb-2 font-logo text-[8px] uppercase leading-none tracking-[0.15em] text-accent">
+                {eyebrow}
+              </p>
+            )}
+            <h1 className="text-[30px] font-semibold leading-[1.06] tracking-[-0.035em] text-ink">
+              {title}
+            </h1>
+            {description && (
+              <p className="mt-2 max-w-3xl text-[13px] leading-relaxed text-muted">
+                {description}
+              </p>
+            )}
+          </div>
+        </div>
       </div>
-      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-2 pb-0.5">{actions}</div>}
     </div>
   );
 }
@@ -75,10 +80,10 @@ export function SectionTitle({
   return (
     <div className={cn("mb-3 flex items-end justify-between gap-3", className)}>
       <div>
-        <h2 className="text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-soft">
+        <h2 className="text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-soft">
           {children}
         </h2>
-        {hint && <p className="mt-0.5 text-[11px] text-faint">{hint}</p>}
+        {hint && <p className="mt-1 text-[11px] text-faint">{hint}</p>}
       </div>
       {action}
     </div>
@@ -116,11 +121,11 @@ export function StatTile({
       >
         {label}
       </p>
-      <p className="mt-0.5 truncate font-serif text-[19px] leading-tight tabular text-ink">
+      <p className="mt-1 truncate text-[21px] font-semibold leading-none tracking-[-0.035em] tabular text-ink">
         {value}
       </p>
       {sub && (
-        <p className={cn("mt-0.5 text-[10px] text-faint", wrap ? "leading-[1.3]" : "truncate")}>
+        <p className={cn("mt-1.5 text-[10px] leading-tight text-faint", wrap ? "leading-[1.3]" : "truncate")}>
           {sub}
         </p>
       )}
@@ -149,7 +154,7 @@ export function EmptyState({
       )}
     >
       {icon && <div className="mb-3 text-faint">{icon}</div>}
-      <p className="font-serif text-[19px] text-ink">{title}</p>
+      <p className="text-[18px] font-semibold tracking-[-0.02em] text-ink">{title}</p>
       {description && (
         <p className="mt-1 max-w-md text-[12px] leading-relaxed text-muted">
           {description}
@@ -243,7 +248,7 @@ export function Tabs({
         >
           {tab.label}
           {tab.count !== undefined && (
-            <span className="ml-1.5 rounded-[2px] bg-black/[0.06] px-1 py-[0.5px] text-[9.5px] tabular text-muted">
+            <span className="ml-1.5 rounded-full bg-paper px-1.5 py-[1px] text-[9.5px] tabular text-muted">
               {tab.count}
             </span>
           )}

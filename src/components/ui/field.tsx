@@ -5,7 +5,7 @@ import { ChevronDown, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const inputClass =
-  "h-[30px] w-full rounded-[3px] border border-line-strong bg-surface px-2 text-[12.5px] text-ink placeholder:text-faint focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15 disabled:opacity-50";
+  "h-8 w-full rounded-lg border border-line-strong bg-surface px-2.5 text-[12.5px] text-ink placeholder:text-faint transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15 disabled:opacity-50";
 
 export const Input = React.forwardRef<
   HTMLInputElement,
@@ -87,19 +87,19 @@ export function SearchInput({
 }) {
   return (
     <div className={cn("relative", className)}>
-      <Search className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-muted" />
+      <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-faint" />
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className={cn(inputClass, "pl-7 pr-7")}
+        className={cn(inputClass, "rounded-full pl-8 pr-8")}
       />
       {value && (
         <button
           type="button"
           onClick={() => onChange("")}
           aria-label="Effacer la recherche"
-          className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted hover:bg-black/5 hover:text-ink"
+          className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-muted hover:bg-paper hover:text-ink"
         >
           <X className="size-3" />
         </button>
@@ -131,7 +131,7 @@ export function Checkbox({
     >
       <span
         className={cn(
-          "relative flex size-[13px] shrink-0 items-center justify-center rounded-[2px] border",
+          "relative flex size-[14px] shrink-0 items-center justify-center rounded-[4px] border",
           checked
             ? "border-navy bg-navy text-white"
             : "border-line-strong bg-surface",
@@ -176,8 +176,8 @@ export function Field({
 }) {
   return (
     <label className={cn("block", className)}>
-      <span className="mb-1 flex items-baseline justify-between gap-2">
-        <span className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-muted">
+      <span className="mb-1.5 flex items-baseline justify-between gap-2">
+        <span className="text-[9.5px] font-semibold uppercase tracking-[0.1em] text-muted">
           {label}
           {required && <span className="ml-0.5 text-accent">*</span>}
         </span>

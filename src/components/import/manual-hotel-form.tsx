@@ -8,14 +8,16 @@ import {
   buildHotelInput,
   emptyEquipements,
   gammeForCategory,
-  zoneRevparMedian,
+  zoneCaPerKeyMedian,
 } from "@/lib/hotel-utils";
 import {
   CATEGORIES,
   CATEGORY_LABEL,
+  CURRENT_DATA_YEAR,
   HOTEL_TYPES,
   MARKET_ZONES,
   RELIABILITY_META,
+  YEARS,
 } from "@/lib/constants";
 import { fmtEuro, fmtInt } from "@/lib/format";
 import { useStore } from "@/lib/store";
@@ -37,8 +39,8 @@ export function ManualHotelForm() {
   const [codePostal, setCodePostal] = useState("");
   const [departement, setDepartement] = useState("");
   const [region, setRegion] = useState("");
-  const [categorie, setCategorie] = useState<Categorie>(4);
-  const [type, setType] = useState<HotelType>("Business");
+  const [categorie, setCategorie] = useState<Categorie>("Non classé");
+  const [type, setType] = useState<HotelType>("Non renseigné");
   const [groupe, setGroupe] = useState("");
   const [cles, setCles] = useState("");
   const [anneeOuverture, setAnneeOuverture] = useState("");
@@ -56,16 +58,30 @@ export function ManualHotelForm() {
   const [sourceAuthor, setSourceAuthor] = useState(currentUser.nom);
   const [reliability, setReliability] = useState<Fiabilite | "">("");
   const [hypothesis, setHypothesis] = useState("");
-  const [annee, setAnnee] = useState(2025);
+  const [annee, setAnnee] = useState(CURRENT_DATA_YEAR);
   const [createEstimate, setCreateEstimate] = useState(true);
 
   const [saving, setSaving] = useState(false);
   const [created, setCreated] = useState<{ id: string; nom: string; estimatedCa: number | null } | null>(null);
 
   const keys = Number(cles) || 0;
-  const zoneMedian = region ? zoneRevparMedian(state.hotels, state.kpis, region, annee) : null;
-  const zoneCount = region ? state.hotels.filter((hotel) => hotel.region === region).length : 0;
-  const estimatedCa = zoneMedian && keys > 0 ? Math.round(zoneMedian * keys * 365) : null;
+  const zoneMedian = region
+    ? zoneCaPerKeyMedian(state.hotels, state.kpis, region, annee)
+    : null;
+  const zoneCount = region
+    ? state.hotels.filter(
+        (hotel) =>
+          hotel.region === region &&
+          hotel.cles > 0 &&
+          state.kpis.some(
+            (kpi) =>
+              kpi.hotelId === hotel.id &&
+              kpi.annee === annee &&
+              kpi.caTotal != null,
+          ),
+      ).length
+    : 0;
+  const estimatedCa = zoneMedian && keys > 0 ? Math.round(zoneMedian * keys) : null;
   const estimatedSurface =
     couvertsInterieur || couvertsExterieur
       ? Math.round((Number(couvertsInterieur) || 0) * 2.75 + (Number(couvertsExterieur) || 0) * 2)
@@ -78,8 +94,8 @@ export function ManualHotelForm() {
     setCodePostal("");
     setDepartement("");
     setRegion("");
-    setCategorie(4);
-    setType("Business");
+    setCategorie("Non classé");
+    setType("Non renseigné");
     setGroupe("");
     setCles("");
     setAnneeOuverture("");
@@ -130,7 +146,7 @@ export function ManualHotelForm() {
         spa,
         restaurantGastro: gastro,
         piscine,
-            piscineInterieure: piscine,
+        piscineInterieure: piscine,
         mice,
         couvertsInterieur: Number(couvertsInterieur) || null,
         couvertsExterieur: Number(couvertsExterieur) || null,
@@ -146,7 +162,7 @@ export function ManualHotelForm() {
           categorie,
           gamme: gammeForCategory(categorie),
           type,
-          groupe: groupe.trim() || "Indépendant",
+          groupe: groupe.trim() || "Non renseigné",
           cles: keys,
           anneeOuverture: Number(anneeOuverture) || null,
           anneeRenovation: Number(anneeRenovation) || null,
@@ -159,18 +175,18 @@ export function ManualHotelForm() {
       let estimatedForHotel: number | null = null;
       if (createEstimate && estimatedCa) {
         const estimateSource: SourceRef = {
-          source: "Estimation Nova — RevPAR médian de zone",
+          source: "Estimation Nova — CA médian par clé de zone",
           dateSource: today(),
           auteur: currentUser.nom,
           fiabilite: "N3",
-          hypothese: `CA estimé = ${fmtInt(keys)} clés × RevPAR médian ${annee} de ${region} (${fmtEuro(
+          hypothese: `CA estimé = ${fmtInt(keys)} clés × CA médian par clé ${annee} de ${region} (${fmtEuro(
             zoneMedian ?? 0,
-          )}) × 365 jours. Médiane calculée sur ${zoneCount} hôtel(s) de la zone.`,
+          )}). Médiane calculée sur ${zoneCount} hôtel(s) de la zone.`,
         };
         const result = upsertKpi({
           hotelId: hotel.id,
           annee,
-          values: { caTotal: estimatedCa, revpar: zoneMedian },
+          values: { caTotal: estimatedCa },
           source: estimateSource,
         });
         if (result.ok) estimatedForHotel = estimatedCa;
@@ -194,7 +210,7 @@ export function ManualHotelForm() {
             <Check className="size-5" />
           </span>
           <div className="min-w-0">
-            <h2 className="font-serif text-[22px] text-ink">{created.nom}</h2>
+            <h2 className="text-[22px] font-semibold tracking-[-0.025em] text-ink">{created.nom}</h2>
             <p className="mt-1 text-[12px] text-ink-soft">
               La fiche a été ajoutée à l’observatoire avec sa source et son niveau de fiabilité.
             </p>
@@ -275,7 +291,7 @@ export function ManualHotelForm() {
               <Input
                 value={groupe}
                 onChange={(event) => setGroupe(event.target.value)}
-                placeholder="Indépendant si non renseigné"
+                placeholder="Ex. groupe, propriétaire"
               />
             </Field>
           </div>
@@ -360,7 +376,7 @@ export function ManualHotelForm() {
                 <Select
                   value={String(annee)}
                   onChange={(value) => setAnnee(Number(value))}
-                  options={[2025, 2024, 2023, 2022, 2021].map((year) => ({ value: String(year), label: String(year) }))}
+                  options={YEARS.map((year) => ({ value: String(year), label: String(year) }))}
                 />
               </Field>
             </div>
@@ -409,13 +425,13 @@ export function ManualHotelForm() {
             <p className="text-[9.5px] font-semibold uppercase tracking-[0.1em] text-muted">
               CA théorique de l’exercice {annee}
             </p>
-            <p className="mt-1 font-serif text-[28px] leading-none text-navy">
+            <p className="mt-1 text-[28px] font-semibold leading-none tracking-[-0.035em] text-navy">
               {estimatedCa ? fmtEuro(estimatedCa) : "—"}
             </p>
             <p className="mt-2 text-[10.5px] leading-relaxed text-muted">
-              {zoneMedian
-                ? `${fmtInt(keys)} clés × RevPAR médian ${fmtEuro(zoneMedian)} × 365 jours.`
-                : "Renseignez la région et le nombre de clés pour calculer l’estimation."}
+                {zoneMedian
+                  ? `${fmtInt(keys)} clés × CA médian par clé ${fmtEuro(zoneMedian)}.`
+                  : "Renseignez la région et le nombre de clés pour calculer l’estimation."}
               {zoneMedian && zoneCount > 0 ? ` Médiane sur ${zoneCount} hôtel(s) de la zone.` : ""}
             </p>
             {estimatedCa && (
@@ -432,7 +448,7 @@ export function ManualHotelForm() {
                 <p className="text-[9.5px] font-semibold uppercase tracking-[0.1em] text-muted">
                   Surface F&B théorique
                 </p>
-                <p className="mt-1 font-serif text-[22px] leading-none text-ink">
+                <p className="mt-1 text-[22px] font-semibold leading-none tracking-[-0.025em] text-ink">
                   {estimatedSurface ? `${fmtInt(estimatedSurface)} m²` : "—"}
                 </p>
               </div>
@@ -467,7 +483,7 @@ export function ManualHotelForm() {
           <ul className="space-y-2 text-[10.5px] leading-relaxed text-muted">
             <li className="flex gap-2">
               <Sparkles className="mt-0.5 size-3 shrink-0 text-accent" />
-              Le RevPAR médian est calculé sur les hôtels de la région disposant d’un RevPAR pour l’exercice choisi.
+              Le CA médian par clé est calculé sur les hôtels de la région disposant d’un CA documenté pour l’exercice choisi.
             </li>
             <li className="flex gap-2">
               <Sparkles className="mt-0.5 size-3 shrink-0 text-accent" />

@@ -193,7 +193,7 @@ export function CompetitiveMap({
           Positionnement concurrentiel
         </p>
         <div className="flex flex-wrap items-baseline justify-between gap-1">
-          <p className="font-serif text-[17px] text-ink">
+          <p className="text-[17px] font-semibold tracking-[-0.02em] text-ink">
             {title ?? "Carte du panel"}
           </p>
           <p className="text-[10px] text-muted">
