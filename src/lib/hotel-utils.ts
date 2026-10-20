@@ -14,7 +14,9 @@ export function categoryFamily(category: Categorie | string | number): string {
 }
 
 export function categoryRank(category: Categorie): number {
-  return category === "Palace" ? 6 : Number(category);
+  if (category === "Palace") return 6;
+  const rank = Number(category);
+  return Number.isFinite(rank) ? rank : 0;
 }
 
 /** Équipements affichés dans la fiche, le filtre et la matrice comparative. */
@@ -25,8 +27,7 @@ export const EQUIPMENT_ROWS: { key: keyof Equipements; label: string }[] = [
   { key: "rooftop", label: "Rooftop" },
   { key: "roomService", label: "Room service" },
   { key: "spa", label: "Spa" },
-  { key: "piscineInterieure", label: "Piscine intérieure" },
-  { key: "piscineExterieure", label: "Piscine extérieure" },
+  { key: "piscine", label: "Piscine" },
   { key: "fitness", label: "Fitness" },
   { key: "parking", label: "Parking" },
   { key: "mice", label: "MICE / séminaires" },
@@ -75,6 +76,7 @@ export function emptyEquipements(): Equipements {
     spa: false,
     spaSurface: null,
     spaCabines: null,
+    piscine: false,
     piscineInterieure: false,
     piscineExterieure: false,
     fitness: false,
@@ -91,7 +93,8 @@ export function gammeForCategory(category: Categorie): Hotel["gamme"] {
   if (category === "Palace" || category === 5) return "Luxe";
   if (category === 4) return "Upscale";
   if (category === 3) return "Milieu de gamme";
-  return "Économique";
+  if (category === 2 || category === 1) return "Économique";
+  return "Non renseigné";
 }
 
 /** Fiche minimale construite à partir d'un formulaire ou d'un import. */
@@ -109,7 +112,7 @@ export function buildHotelInput(
   const category = overrides.categorie ?? 4;
   return {
     nom: overrides.nom,
-    groupe: overrides.groupe ?? "Indépendant",
+    groupe: overrides.groupe ?? "Non renseigné",
     enseigne: overrides.enseigne ?? overrides.nom,
     adresse: overrides.adresse ?? "",
     codePostal: overrides.codePostal ?? "",
@@ -120,10 +123,10 @@ export function buildHotelInput(
     longitude: coords.lng,
     categorie: category,
     gamme: overrides.gamme ?? gammeForCategory(category),
-    type: overrides.type ?? "Business",
-    exploitation: overrides.exploitation ?? "Indépendant",
+    type: overrides.type ?? "Non renseigné",
+    exploitation: overrides.exploitation ?? "Non renseigné",
     proprietaire: overrides.proprietaire ?? "Non renseigné",
-    exploitant: overrides.exploitant ?? overrides.groupe ?? "Indépendant",
+    exploitant: overrides.exploitant ?? overrides.groupe ?? "Non renseigné",
     anneeOuverture: overrides.anneeOuverture ?? null,
     anneeRenovation: overrides.anneeRenovation ?? null,
     cles: overrides.cles ?? 0,
@@ -135,9 +138,7 @@ export function buildHotelInput(
     nbSallesSeminaire: overrides.nbSallesSeminaire ?? null,
     capaciteMiceMax: overrides.capaciteMiceMax ?? null,
     equipements: { ...emptyEquipements(), ...(overrides.equipements ?? {}) },
-    photoUrl:
-      overrides.photoUrl ??
-      "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80",
+    photoUrl: overrides.photoUrl ?? "",
     siteUrl: overrides.siteUrl ?? null,
     source: overrides.source,
   };

@@ -1,0 +1,653 @@
+{
+  "Vinay": {
+    "latitude": 45.213652,
+    "longitude": 5.412737,
+    "departement": "38",
+    "label": "Vinay"
+  },
+  "Courchevel": {
+    "latitude": 45.430622,
+    "longitude": 6.622002,
+    "departement": "73",
+    "label": "Courchevel"
+  },
+  "Lyon": {
+    "latitude": 45.758,
+    "longitude": 4.835,
+    "departement": "69",
+    "label": "Lyon"
+  },
+  "Grenoble": {
+    "latitude": 45.182828,
+    "longitude": 5.724301,
+    "departement": "38",
+    "label": "Grenoble"
+  },
+  "Les Belleville": {
+    "latitude": 45.370822,
+    "longitude": 6.513781,
+    "departement": "73",
+    "label": "Les Belleville"
+  },
+  "Oyonnax": {
+    "latitude": 46.264243,
+    "longitude": 5.639158,
+    "departement": "01",
+    "label": "Oyonnax"
+  },
+  "Morzine": {
+    "latitude": 46.181994,
+    "longitude": 6.726342,
+    "departement": "74",
+    "label": "Morzine"
+  },
+  "Villefranche-sur-Saône": {
+    "latitude": 45.985089,
+    "longitude": 4.724382,
+    "departement": "69",
+    "label": "Villefranche-sur-Saône"
+  },
+  "Valence": {
+    "latitude": 44.922579,
+    "longitude": 4.921827,
+    "departement": "26",
+    "label": "Valence"
+  },
+  "Chambéry": {
+    "latitude": 45.583223,
+    "longitude": 5.909299,
+    "departement": "73",
+    "label": "Chambéry"
+  },
+  "Andrézieux-Bouthéon": {
+    "latitude": 45.532152,
+    "longitude": 4.28067,
+    "departement": "42",
+    "label": "Andrézieux-Bouthéon"
+  },
+  "Saint-Étienne": {
+    "latitude": 45.430195,
+    "longitude": 4.370045,
+    "departement": "42",
+    "label": "Saint-Étienne"
+  },
+  "Annecy": {
+    "latitude": 45.901584,
+    "longitude": 6.125296,
+    "departement": "74",
+    "label": "Annecy"
+  },
+  "Chamonix-Mont-Blanc": {
+    "latitude": 45.948385,
+    "longitude": 6.893163,
+    "departement": "74",
+    "label": "Chamonix-Mont-Blanc"
+  },
+  "Saint-Tropez": {
+    "latitude": 43.264949,
+    "longitude": 6.658119,
+    "departement": "83",
+    "label": "Saint-Tropez"
+  },
+  "Les Deux Alpes": {
+    "latitude": 45.010476,
+    "longitude": 6.121826,
+    "departement": "38",
+    "label": "Les Deux Alpes"
+  },
+  "Èze": {
+    "latitude": 43.727456,
+    "longitude": 7.362204,
+    "departement": "Alpes-Maritimes",
+    "label": "Èze"
+  },
+  "Tignes": {
+    "latitude": 45.49388,
+    "longitude": 6.927293,
+    "departement": "73",
+    "label": "Tignes"
+  },
+  "La Plagne Tarentaise": {
+    "latitude": 45.556605,
+    "longitude": 6.694541,
+    "departement": "73",
+    "label": "La Plagne Tarentaise"
+  },
+  "Val d’Isère": {
+    "latitude": 45.448292,
+    "longitude": 6.988649,
+    "departement": "73",
+    "label": "Val-d'Isère"
+  },
+  "Marseille": {
+    "latitude": 43.282,
+    "longitude": 5.405,
+    "departement": "Bouches-du-Rhône",
+    "label": "Marseille"
+  },
+  "Paradou": {
+    "latitude": 43.716838,
+    "longitude": 4.782573,
+    "departement": "13",
+    "label": "Paradou"
+  },
+  "Cannes": {
+    "latitude": 43.555468,
+    "longitude": 7.004585,
+    "departement": "06",
+    "label": "Cannes"
+  },
+  "Beaulieu-sur-Mer": {
+    "latitude": 43.708249,
+    "longitude": 7.332049,
+    "departement": "06",
+    "label": "Beaulieu-sur-Mer"
+  },
+  "Cagnes-sur-Mer": {
+    "latitude": 43.675636,
+    "longitude": 7.150092,
+    "departement": "06",
+    "label": "Cagnes-sur-Mer"
+  },
+  "Aix-en-Provence": {
+    "latitude": 43.541369,
+    "longitude": 5.406124,
+    "departement": "13",
+    "label": "Aix-en-Provence"
+  },
+  "Orange": {
+    "latitude": 44.129795,
+    "longitude": 4.813318,
+    "departement": "84",
+    "label": "Orange"
+  },
+  "Saint-Victoret": {
+    "latitude": 43.413729,
+    "longitude": 5.25061,
+    "departement": "13",
+    "label": "Saint-Victoret"
+  },
+  "Les Pennes-Mirabeau": {
+    "latitude": 43.39829,
+    "longitude": 5.326859,
+    "departement": "13",
+    "label": "Les Pennes-Mirabeau"
+  },
+  "Serre-Chevalier": {
+    "latitude": 45.047963,
+    "longitude": 5.04918,
+    "departement": "Drôme",
+    "label": "Rue Chevalier 26100 Romans-sur-Isère"
+  },
+  "Saint-Mitre-les-Remparts": {
+    "latitude": 43.453126,
+    "longitude": 5.018587,
+    "departement": "13",
+    "label": "Saint-Mitre-les-Remparts"
+  },
+  "Avignon": {
+    "latitude": 43.936345,
+    "longitude": 4.848861,
+    "departement": "84",
+    "label": "Avignon"
+  },
+  "Cap-d’Ail": {
+    "latitude": 43.726145,
+    "longitude": 7.398891,
+    "departement": "06",
+    "label": "Cap-d'Ail"
+  },
+  "Antibes": {
+    "latitude": 43.582195,
+    "longitude": 7.103254,
+    "departement": "06",
+    "label": "Antibes"
+  },
+  "Aloxe-Corton": {
+    "latitude": 47.066079,
+    "longitude": 4.859065,
+    "departement": "21",
+    "label": "Aloxe-Corton"
+  },
+  "Meursault": {
+    "latitude": 46.97516,
+    "longitude": 4.778946,
+    "departement": "21",
+    "label": "Meursault"
+  },
+  "Rennes": {
+    "latitude": 48.110899,
+    "longitude": -1.68365,
+    "departement": "35",
+    "label": "Rennes"
+  },
+  "Taden": {
+    "latitude": 48.484666,
+    "longitude": -2.054247,
+    "departement": "22",
+    "label": "Taden"
+  },
+  "Besançon": {
+    "latitude": 47.251938,
+    "longitude": 6.001699,
+    "departement": "25",
+    "label": "Besançon"
+  },
+  "Quimper": {
+    "latitude": 47.998695,
+    "longitude": -4.093228,
+    "departement": "29",
+    "label": "Quimper"
+  },
+  "Azay-le-Rideau": {
+    "latitude": 47.268681,
+    "longitude": 0.462293,
+    "departement": "37",
+    "label": "Azay-le-Rideau"
+  },
+  "Le Palais": {
+    "latitude": 47.340398,
+    "longitude": -3.167376,
+    "departement": "56",
+    "label": "Le Palais"
+  },
+  "Veigné": {
+    "latitude": 47.286563,
+    "longitude": 0.722619,
+    "departement": "37",
+    "label": "Veigné"
+  },
+  "Quiberon": {
+    "latitude": 47.486711,
+    "longitude": -3.120228,
+    "departement": "56",
+    "label": "Quiberon"
+  },
+  "Saint-Laurent-Nouan": {
+    "latitude": 47.712426,
+    "longitude": 1.621619,
+    "departement": "41",
+    "label": "Saint-Laurent-Nouan"
+  },
+  "Tours": {
+    "latitude": 47.395476,
+    "longitude": 0.695848,
+    "departement": "Indre-et-Loire",
+    "label": "Tours"
+  },
+  "Porto-Vecchio": {
+    "latitude": 41.582755,
+    "longitude": 9.263941,
+    "departement": "2A",
+    "label": "Porto-Vecchio"
+  },
+  "Strasbourg": {
+    "latitude": 48.579831,
+    "longitude": 7.761454,
+    "departement": "67",
+    "label": "Strasbourg"
+  },
+  "Serra-di-Ferro": {
+    "latitude": 41.732143,
+    "longitude": 8.825071,
+    "departement": "2A",
+    "label": "Serra-di-Ferro"
+  },
+  "Hésingue": {
+    "latitude": 47.576778,
+    "longitude": 7.524635,
+    "departement": "68",
+    "label": "Hésingue"
+  },
+  "Reims": {
+    "latitude": 49.250948,
+    "longitude": 4.055595,
+    "departement": "51",
+    "label": "Reims"
+  },
+  "Metz": {
+    "latitude": 49.108385,
+    "longitude": 6.194891,
+    "departement": "Moselle",
+    "label": "Metz"
+  },
+  "Troyes": {
+    "latitude": 48.292817,
+    "longitude": 4.075149,
+    "departement": "10",
+    "label": "Troyes"
+  },
+  "Calais": {
+    "latitude": 50.951564,
+    "longitude": 1.866112,
+    "departement": "62",
+    "label": "Calais"
+  },
+  "Vannes": {
+    "latitude": 47.659971,
+    "longitude": -2.752192,
+    "departement": "56",
+    "label": "Vannes"
+  },
+  "Maintenon": {
+    "latitude": 48.586251,
+    "longitude": 1.58914,
+    "departement": "28",
+    "label": "Maintenon"
+  },
+  "Obernai": {
+    "latitude": 48.462885,
+    "longitude": 7.468147,
+    "departement": "67",
+    "label": "Obernai"
+  },
+  "Arras": {
+    "latitude": 50.287896,
+    "longitude": 2.768267,
+    "departement": "62",
+    "label": "Arras"
+  },
+  "Bruay-la-Buissière": {
+    "latitude": 50.485715,
+    "longitude": 2.555019,
+    "departement": "62",
+    "label": "Bruay-la-Buissière"
+  },
+  "Lomme-lez-Lille": {
+    "latitude": 50.661146,
+    "longitude": 3.040218,
+    "departement": "59",
+    "label": "Saint-André-lez-Lille"
+  },
+  "Amiens": {
+    "latitude": 49.903041,
+    "longitude": 2.292605,
+    "departement": "80",
+    "label": "Amiens"
+  },
+  "Beauvais": {
+    "latitude": 49.439313,
+    "longitude": 2.087881,
+    "departement": "60",
+    "label": "Beauvais"
+  },
+  "La Chapelle-en-Serval": {
+    "latitude": 49.121296,
+    "longitude": 2.532608,
+    "departement": "60",
+    "label": "La Chapelle-en-Serval"
+  },
+  "Bordeaux": {
+    "latitude": 44.851939,
+    "longitude": -0.587877,
+    "departement": "33",
+    "label": "Bordeaux"
+  },
+  "Cap-Ferret": {
+    "latitude": 44.723963,
+    "longitude": -1.199455,
+    "departement": "33",
+    "label": "Lège-Cap-Ferret"
+  },
+  "Boulazac": {
+    "latitude": 45.138859,
+    "longitude": 0.783086,
+    "departement": "24",
+    "label": "Boulazac Isle Manoire"
+  },
+  "Arcachon": {
+    "latitude": 44.651462,
+    "longitude": -1.173981,
+    "departement": "33",
+    "label": "Arcachon"
+  },
+  "La Rochelle": {
+    "latitude": 46.157457,
+    "longitude": -1.170642,
+    "departement": "17",
+    "label": "La Rochelle"
+  },
+  "Lormont": {
+    "latitude": 44.875952,
+    "longitude": -0.516136,
+    "departement": "33",
+    "label": "Lormont"
+  },
+  "Biarritz": {
+    "latitude": 43.472166,
+    "longitude": -1.555076,
+    "departement": "64",
+    "label": "Biarritz"
+  },
+  "Toulouse": {
+    "latitude": 43.604082,
+    "longitude": 1.433805,
+    "departement": "31",
+    "label": "Toulouse"
+  },
+  "Perpignan": {
+    "latitude": 42.701507,
+    "longitude": 2.902811,
+    "departement": "66",
+    "label": "Perpignan"
+  },
+  "Niort": {
+    "latitude": 46.327232,
+    "longitude": -0.466291,
+    "departement": "79",
+    "label": "Niort"
+  },
+  "Sainte-Anne": {
+    "latitude": 16.257653,
+    "longitude": -61.390999,
+    "departement": "971",
+    "label": "Sainte-Anne"
+  },
+  "ND": {
+    "echec": true
+  },
+  "Lourdes": {
+    "latitude": 43.105728,
+    "longitude": -0.067389,
+    "departement": "65",
+    "label": "Lourdes"
+  },
+  "Montpellier": {
+    "latitude": 43.610476,
+    "longitude": 3.87048,
+    "departement": "34",
+    "label": "Montpellier"
+  },
+  "Colomiers": {
+    "latitude": 43.609804,
+    "longitude": 1.32962,
+    "departement": "31",
+    "label": "Colomiers"
+  },
+  "La Guérinière": {
+    "latitude": 46.966506,
+    "longitude": -2.23258,
+    "departement": "85",
+    "label": "La Guérinière"
+  },
+  "Angers": {
+    "latitude": 47.467471,
+    "longitude": -0.561615,
+    "departement": "49",
+    "label": "Angers"
+  },
+  "Blagnac": {
+    "latitude": 43.63735,
+    "longitude": 1.38326,
+    "departement": "31",
+    "label": "Blagnac"
+  },
+  "Mulsanne": {
+    "latitude": 47.918943,
+    "longitude": 0.248322,
+    "departement": "72",
+    "label": "Mulsanne"
+  },
+  "Nantes": {
+    "latitude": 47.239367,
+    "longitude": -1.555335,
+    "departement": "44",
+    "label": "Nantes"
+  },
+  "Versailles": {
+    "latitude": 48.802928,
+    "longitude": 2.121128,
+    "departement": "78",
+    "label": "Versailles"
+  },
+  "Locquirec": {
+    "latitude": 48.682963,
+    "longitude": -3.671355,
+    "departement": "29",
+    "label": "Locquirec"
+  },
+  "Paris": {
+    "latitude": 48.859,
+    "longitude": 2.347,
+    "departement": "75",
+    "label": "Paris"
+  },
+  "Saint-Ouen-sur-Seine": {
+    "latitude": 48.911705,
+    "longitude": 2.3334,
+    "departement": "93",
+    "label": "Saint-Ouen-sur-Seine"
+  },
+  "Clichy": {
+    "latitude": 48.90348,
+    "longitude": 2.305118,
+    "departement": "92",
+    "label": "Clichy"
+  },
+  "Issy-les-Moulineaux": {
+    "latitude": 48.823903,
+    "longitude": 2.262887,
+    "departement": "92",
+    "label": "Issy-les-Moulineaux"
+  },
+  "Rueil-Malmaison": {
+    "latitude": 48.874531,
+    "longitude": 2.180455,
+    "departement": "92",
+    "label": "Rueil-Malmaison"
+  },
+  "Clamart": {
+    "latitude": 48.796102,
+    "longitude": 2.25475,
+    "departement": "92",
+    "label": "Clamart"
+  },
+  "Les Ulis": {
+    "latitude": 48.681846,
+    "longitude": 2.18615,
+    "departement": "91",
+    "label": "Les Ulis"
+  },
+  "Chanteloup-en-Brie": {
+    "latitude": 48.859862,
+    "longitude": 2.741246,
+    "departement": "77",
+    "label": "Chanteloup-en-Brie"
+  },
+  "Magny-les-Hameaux": {
+    "latitude": 48.733225,
+    "longitude": 2.067844,
+    "departement": "78",
+    "label": "Magny-les-Hameaux"
+  },
+  "Bègles": {
+    "latitude": 44.802062,
+    "longitude": -0.551187,
+    "departement": "33",
+    "label": "Bègles"
+  },
+  "Colombes": {
+    "latitude": 48.922451,
+    "longitude": 2.247799,
+    "departement": "92",
+    "label": "Colombes"
+  },
+  "Levallois-Perret": {
+    "latitude": 48.894215,
+    "longitude": 2.286846,
+    "departement": "92",
+    "label": "Levallois-Perret"
+  },
+  "La Défense": {
+    "latitude": 48.890171,
+    "longitude": 2.242921,
+    "departement": "Hauts-de-Seine",
+    "label": "la Défense 92800 Puteaux"
+  },
+  "Poissy": {
+    "latitude": 48.930299,
+    "longitude": 2.033457,
+    "departement": "78",
+    "label": "Poissy"
+  },
+  "Nîmes": {
+    "latitude": 43.814652,
+    "longitude": 4.356289,
+    "departement": "30",
+    "label": "Nîmes"
+  },
+  "Rouen": {
+    "latitude": 49.440051,
+    "longitude": 1.093912,
+    "departement": "76",
+    "label": "Rouen"
+  },
+  "Puteaux": {
+    "latitude": 48.884156,
+    "longitude": 2.237199,
+    "departement": "92",
+    "label": "Puteaux"
+  },
+  "Nice": {
+    "latitude": 43.71273,
+    "longitude": 7.255313,
+    "departement": "Alpes-Maritimes",
+    "label": "Nice"
+  },
+  "Trouville-sur-Mer": {
+    "latitude": 49.371571,
+    "longitude": 0.102801,
+    "departement": "14",
+    "label": "Trouville-sur-Mer"
+  },
+  "Grasse": {
+    "latitude": 43.654057,
+    "longitude": 6.937765,
+    "departement": "06",
+    "label": "Grasse"
+  },
+  "Mougins": {
+    "latitude": 43.595253,
+    "longitude": 6.999298,
+    "departement": "06",
+    "label": "Mougins"
+  },
+  "Roissy-en-France": {
+    "latitude": 48.998904,
+    "longitude": 2.511155,
+    "departement": "95",
+    "label": "Roissy-en-France"
+  },
+  "Merville-Franceville-Plage": {
+    "latitude": 49.269069,
+    "longitude": -0.192608,
+    "departement": "14",
+    "label": "Merville-Franceville-Plage"
+  },
+  "Mandelieu-la-Napoule": {
+    "latitude": 43.544471,
+    "longitude": 6.933663,
+    "departement": "06",
+    "label": "Mandelieu-la-Napoule"
+  }
+}

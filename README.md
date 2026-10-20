@@ -2,7 +2,7 @@
 
 Base de données hôtelière et poste de travail pour le conseil en stratégie hôtelière en France métropolitaine. L’application réunit une cartographie fine, des fiches traçables, un comparateur concurrentiel, des benchmarks versionnés, un suivi du marché et des transactions, un import enrichi et des outils de qualité de données.
 
-> **Mode démonstration.** Le jeu de données livré contient **200 hôtels fictifs**, clairement signalés « DÉMO », répartis dans 5 régions. Aucune donnée réelle n’est présentée comme vérifiée. Les valeurs, sources et transactions sont générées pour illustrer le produit.
+> **Base compilée.** L’application est alimentée par le classeur **« BDD transactions hôtelières - vcompilée.xlsx »** : 245 actifs, 231 exercices de CA, 245 transactions documentées. Les valeurs absentes ne sont ni inventées ni extrapolées ; elles restent vides et sont signalées « non documenté ». Les coordonnées sont des centroïdes communaux BAN, pas des adresses exactes.
 
 ## Sommaire
 
@@ -14,7 +14,7 @@ Base de données hôtelière et poste de travail pour le conseil en stratégie h
 - [Traçabilité et fiabilité](#traçabilité-et-fiabilité)
 - [Exports](#exports)
 - [Import et enrichissement](#import-et-enrichissement)
-- [Mode démo et persistance](#mode-démo-et-persistance)
+- [Mode local et persistance](#mode-local-et-persistance)
 - [Passage en production Supabase / PostGIS](#passage-en-production-supabase--postgis)
 - [Déploiement Vercel](#déploiement-vercel)
 - [Limites connues](#limites-connues)
@@ -31,7 +31,7 @@ Base de données hôtelière et poste de travail pour le conseil en stratégie h
 | **Marché & transactions** | Offre par catégorie, ouvertures documentées, performance par catégorie, pipeline, transactions filtrables, prix par clé et volumes, prix par région, export Excel. Les fermetures ne sont pas extrapolées. |
 | **Import & enrichissement** | CSV/XLSX, mapping mémorisé, aperçu, détection de doublons, fusion/création/ignorance, géocodage BAN, saisie manuelle, estimateur N3 avec hypothèse explicite, historique des lots. |
 | **Qualité des données** | Heatmap de complétude par région ou catégorie, distribution N1/N2/N3, données de plus de deux ans, file de tâches assignables, export Excel. |
-| **Administration** | Utilisateurs et rôles, accès aux données confidentielles, matrice des droits, journal d’audit filtrable, export CSV, réinitialisation de la démo. |
+| **Administration** | Utilisateurs et rôles, accès aux données confidentielles, matrice des droits, journal d’audit filtrable, export CSV, réinitialisation de la base. |
 
 ## Démarrage rapide
 
@@ -44,9 +44,9 @@ npm run dev
 
 Ouvrir [http://localhost:3000](http://localhost:3000).
 
-Aucune variable d’environnement n’est nécessaire pour la démonstration. Les données sont chargées depuis `src/data/demo.json` puis persistées dans le `localStorage` du navigateur.
+Aucune variable d’environnement n’est nécessaire pour le mode local. Les données sont chargées depuis `src/data/nova-base.json` puis persistées dans le `localStorage` du navigateur.
 
-Pour repartir du jeu de démonstration initial : menu utilisateur en bas de la barre latérale → **Réinitialiser la démo** (ou Administration → Zone de démonstration).
+Pour repartir de la base compilée initiale : menu utilisateur en bas de la barre latérale → **Réinitialiser la base** (ou Administration → Zone de réinitialisation).
 
 ## Scripts
 
@@ -56,16 +56,16 @@ npm run build       # build de production
 npm run start       # serveur de production
 npm run lint        # ESLint
 npm run typecheck   # vérification TypeScript
-node scripts/generate-demo.mjs  # régénère src/data/demo.json
+node scripts/build-nova-base.mjs  # régénère src/data/nova-base.json depuis le classeur source
 ```
 
-Le générateur est déterministe (graine fixe) : il produit 200 hôtels, 5 régions, 948 lignes de KPI (2021–2025), 51 transactions, 28 projets de pipeline, 6 utilisateurs, des sélections, des benchmarks et des tâches.
+Le script de conversion lit la feuille `BDD Stagiaires compilée` (en-têtes ligne 11), normalise les régions, géocode les villes via l’API BAN (cache `src/data/ville-coords.json`) et produit 245 hôtels, 231 lignes d’exploitation, 245 transactions et 245 observations d’identité. Les dimensions absentes du fichier (EBITDA, prix/nuit, MICE annuel, valorisations) restent vides.
 
 ## Architecture
 
 ```text
 src/
-  app/                     pages App Router (toutes clientes pour le mode démo)
+  app/                     pages App Router (toutes clientes pour le mode local)
     page.tsx               carte & recherche
     hotels/                annuaire et fiche hôtel
     comparateur/           comparateur
@@ -94,7 +94,8 @@ src/
     exports.ts             Excel, CSV, PNG, PowerPoint
     market-export.ts       export Excel du marché
     geo.ts                 haversine, polygones, centroïdes
-  data/demo.json           jeu de démonstration
+  data/nova-base.json      base compilée depuis le classeur source
+  data/ville-coords.json   cache de géocodage BAN
 public/
   geo/                     régions et départements GeoJSON
   maplibre/                worker MapLibre auto-hébergé
@@ -106,9 +107,22 @@ Stack : Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, MapLibre
 
 ## Modèle de données
 
-- **`hotels`** : identité, groupe/enseigne, adresse, coordonnées, catégorie (1–5 ou Palace), gamme, type, exploitation, propriétaire/exploitant, ouverture/rénovation, clés, suites, surfaces (totale, hébergement, F&B, MICE), salles et capacité MICE, équipements détaillés, source et fiabilité, indicateur démo.
-- **`hotel_kpis`** : une ligne par hôtel et par exercice. CA total/hébergement/F&B/autres, TO, ADR, RevPAR, EBITDA et marge, GOP, effectif, note et nombre d’avis. Tous les champs sont nullables. Chaque ligne porte une source complète (libellé, date, auteur, fiabilité, hypothèse).
-- **`transactions`** : date, acheteur, vendeur, prix, prix/clé, type (murs/fonds/les deux), CA avant/après, source, indicateur `confidentielClient`.
+Le schéma cible est organisé en **7 bases** reliées à l’hôtel :
+
+| Base | Contenu | Source |
+| --- | --- | --- |
+| **Hôtel** | Nom, pays, région, ville, localisation, coordonnées BAN | Atout France + missions |
+| **Identité** | Chambres, suites, surfaces, équipements, restauration | Atout France + missions |
+| **Exploitation** | Une ligne par exercice : CA, EBITDA | Missions / comptes |
+| **Transaction** | Date de deal, gammes et clés avant/après, CA avant/après, analyste | CFNEWS |
+| **Prix / nuit** | Une ligne par prix observé | Missions — vide dans le fichier fourni |
+| **MICE** | Salles, surfaces MICE | Missions — vide dans le fichier fourni |
+| **Valorisations NOVA** | Valorisation par exercice | Missions — vide dans le fichier fourni |
+
+- **`hotels`** : identité et localisation, catégorie, gamme, clés, suites, surfaces, équipements, source et fiabilité. Les champs non documentés valent `null` ou « Non renseigné ».
+- **`hotel_kpis` / `exploitations`** : CA total par exercice (seule valeur disponible dans la base fournie). ADR, TO, RevPAR, EBITDA, effectif et note restent nullables et ne sont jamais estimés.
+- **`transactions`** : date, CA avant/après et exercices, gammes et clés avant/après, analyste, localisation, sources par bloc. Prix, prix/clé, acheteur et vendeur sont vides car absents du fichier.
+- **`identities`**, **`priceObservations`**, **`miceObservations`**, **`valuations`** : tables prêtes pour les connecteurs MISSIONS V2.
 - **`pipeline_projects`** : projet, ville, catégorie, clés, ouverture prévue, statut, promoteur.
 - **`saved_selections`** : nom, filtres, hôtels, auteur, partage.
 - **`benchmarks`** : client, mission, panel, référence, exercice, KPI, secteurs, notes, version.
@@ -137,7 +151,7 @@ Règles appliquées dans le store et dans la migration SQL :
 3. l’ancienne valeur KPI est conservée dans l’historique et un journal d’audit est créé ;
 4. aucune valeur manquante n’est inventée : elle reste nulle ou explicitement estimée.
 
-Les exports Excel comportent une feuille **Méthodologie** avec le périmètre, les filtres, la date, l’auteur et la légende de fiabilité. Les slides PowerPoint rappellent la source et le caractère démo.
+Les exports Excel comportent une feuille **Méthodologie** avec le périmètre, les filtres, la date, l’auteur et la légende de fiabilité. Les slides PowerPoint rappellent la source et le périmètre documentaire.
 
 ## Exports
 
@@ -165,14 +179,14 @@ L’estimateur de saisie manuelle applique des hypothèses explicites :
 
 Toute estimation crée une valeur **N3** avec son hypothèse, jamais une valeur présentée comme observée.
 
-## Mode démo et persistance
+## Mode local et persistance
 
-- Les données initiales sont dans `src/data/demo.json`.
-- L’état est conservé dans `localStorage` sous `nova-observatoire-v1`.
+- Les données initiales sont dans `src/data/nova-base.json` (base compilée).
+- L’état est conservé dans `localStorage` sous `nova-observatoire-v2`.
 - Les créations, modifications, imports, tâches et audits sont locaux au navigateur.
 - Le menu utilisateur permet de changer de rôle pour tester les droits (lecteur, contributeur, admin).
-- Le bouton **Réinitialiser la démo** restaure le jeu initial.
-- Aucune donnée n’est envoyée à un serveur en mode démo.
+- Le bouton **Réinitialiser la base** restaure la base compilée initiale.
+- Aucune donnée n’est envoyée à un serveur en mode local.
 
 ## Passage en production Supabase / PostGIS
 
@@ -196,11 +210,11 @@ Puis :
 
 1. créer les utilisateurs dans Supabase Auth (invitation ou mot de passe) ;
 2. renseigner les variables de `.env.example` dans `.env.local` et dans Vercel ;
-3. remplacer le fournisseur de démonstration par des dépôts Supabase (lecture des hôtels/KPI, mutations protégées par RLS) ;
+3. remplacer le fournisseur local par des dépôts Supabase (lecture des hôtels/KPI, mutations protégées par RLS) ;
 4. brancher l’authentification sur `profiles` et les rôles ;
 5. vérifier les politiques RLS avec un compte lecteur, un contributeur et un admin.
 
-Le code de démonstration et la migration partagent le même modèle conceptuel, mais **l’application livrée n’est pas encore connectée à Supabase** : aucune clé n’a été fournie. Le mode démo est autonome et ne nécessite pas la base.
+Le code local et la migration partagent le même modèle conceptuel, mais **l’application livrée n’est pas encore connectée à Supabase** : aucune clé n’a été fournie. Le mode local est autonome et ne nécessite pas la base.
 
 ## Déploiement Vercel
 
@@ -211,17 +225,17 @@ npx vercel
 npx vercel --prod
 ```
 
-Ou import du dépôt GitHub dans Vercel. Aucune variable n’est requise pour la démo. Pour la production, ajouter les variables Supabase et l’URL publique.
+Ou import du dépôt GitHub dans Vercel. Aucune variable n’est requise pour le mode local. Pour la production, ajouter les variables Supabase et l’URL publique.
 
 ## Limites connues
 
-- Jeu de démonstration fictif, non utilisable pour une décision réelle.
+- Base compilée de mission : les champs absents du classeur source ne sont pas documentés. Les coordonnées sont des centroïdes communaux BAN.
 - Persistance locale uniquement ; plusieurs navigateurs ne partagent pas les mêmes données.
 - Connecteurs SIRENE et Atout France annoncés V2, non branchés.
-- Les fermetures d’hôtels ne sont pas documentées dans la démo et ne sont donc pas extrapolées.
+- Les fermetures, prix de cession, EBITDA, prix/nuit, MICE annuel et valorisations ne sont pas documentés dans le fichier fourni et ne sont donc pas extrapolés.
 - La carte utilise un fond CARTO Positron et des GeoJSON administratifs simplifiés.
-- Certains hôtels de démonstration n’ont pas de KPI récent : ils apparaissent dans la file qualité, ce qui est intentionnel.
-- Le module d’import mémorise le mapping dans le navigateur ; le mapping n’est pas partagé entre postes en mode démo.
+- Certains actifs n’ont pas de CA pour l’exercice sélectionné : ils apparaissent dans la file qualité, ce qui est intentionnel.
+- Le module d’import mémorise le mapping dans le navigateur ; le mapping n’est pas partagé entre postes en mode local.
 
 ## Contrôles qualité
 
@@ -235,4 +249,4 @@ Les écrans ont été vérifiés avec Playwright en mode headless (MapLibre/WebG
 
 ## Licence et usage
 
-Projet interne de démonstration. Les noms d’hôtels, groupes, transactions et personnes sont fictifs. Toute réutilisation des données de démonstration doit conserver la mention « DÉMO ».
+Projet interne. Les données sont issues de la compilation de transactions hôtelières fournie par le client ; elles ne doivent pas être diffusées hors du périmètre autorisé.

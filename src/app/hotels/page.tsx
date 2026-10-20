@@ -12,8 +12,8 @@ import {
   Search,
   SlidersHorizontal,
 } from "lucide-react";
-import { CATEGORIES, CATEGORY_LABEL, CURRENT_DATA_YEAR, EXTRACTION_DATE, GROUPES } from "@/lib/constants";
-import { fmtDate, fmtInt, fmtNum } from "@/lib/format";
+import { CATEGORIES, CATEGORY_COLOR, CATEGORY_LABEL, CURRENT_DATA_YEAR, EXTRACTION_DATE, GROUPES, YEARS } from "@/lib/constants";
+import { fmtDate, fmtEuro, fmtInt, fmtNum } from "@/lib/format";
 import {
   defaultFilters,
   filterHotels,
@@ -49,7 +49,7 @@ export default function HotelsPage() {
   const { state, currentUser, toggleBasket } = useStore();
   const { toast } = useToast();
   const [filters, setFilters] = React.useState<Filters>(() => defaultFilters(CURRENT_DATA_YEAR));
-  const [sortKey, setSortKey] = React.useState<DirectorySort>("revpar");
+  const [sortKey, setSortKey] = React.useState<DirectorySort>("caTotal");
   const [sortDirection, setSortDirection] = React.useState<SortDirection>("desc");
 
   const hotels = React.useMemo(
@@ -63,8 +63,8 @@ export default function HotelsPage() {
 
   const stats = React.useMemo(() => {
     const keys = sum(hotels.map((hotel) => hotel.cles));
-    const adrs = hotels
-      .map((hotel) => kpiFor(hotel.id, state.kpis, filters.annee)?.adr)
+    const caValues = hotels
+      .map((hotel) => kpiFor(hotel.id, state.kpis, filters.annee)?.caTotal)
       .filter((value): value is number => value != null);
     const n1 = hotels.filter((hotel) => {
       const source = kpiFor(hotel.id, state.kpis, filters.annee)?.source ?? hotel.source;
@@ -72,7 +72,8 @@ export default function HotelsPage() {
     }).length;
     return {
       keys,
-      adr: adrs.length ? sum(adrs) / adrs.length : null,
+      caTotal: caValues.length ? sum(caValues) : null,
+      documented: caValues.length,
       n1Share: hotels.length ? (n1 / hotels.length) * 100 : null,
     };
   }, [hotels, state.kpis, filters.annee]);
@@ -133,7 +134,7 @@ export default function HotelsPage() {
       <PageHeader
         eyebrow="Base hôtelière"
         title="Fiches hôtels"
-        description="Le répertoire central de l’observatoire : 200 établissements fictifs répartis sur cinq régions, filtrables et exportables avec leurs sources."
+        description="Le répertoire central de l’observatoire : les actifs de la base compilée, filtrables et exportables avec leurs sources."
         actions={
           <>
             <Button variant="outline" size="sm" onClick={exportExcel}>
@@ -157,9 +158,9 @@ export default function HotelsPage() {
         <StatTile label="Hôtels" value={fmtInt(hotels.length)} sub={`sur ${state.hotels.length} fiches`} accent />
         <StatTile label="Clés" value={fmtInt(stats.keys)} sub="capacité cumulée" />
         <StatTile
-          label="ADR moyen"
-          value={stats.adr != null ? `${fmtNum(stats.adr, 0)} €` : "—"}
-          sub={`exercice ${filters.annee}`}
+          label="CA documenté"
+          value={fmtEuro(stats.caTotal, true)}
+          sub={`${stats.documented} fiche(s) · exercice ${filters.annee}`}
         />
         <StatTile
           label="Sources N1"
@@ -233,7 +234,7 @@ export default function HotelsPage() {
               onChange={(annee) =>
                 setFilters((current) => ({ ...current, annee: Number(annee) }))
               }
-              options={[2025, 2024, 2023, 2022, 2021].map((year) => ({
+              options={YEARS.map((year) => ({
                 value: String(year),
                 label: `Exercice ${year}`,
               }))}
@@ -285,18 +286,10 @@ export default function HotelsPage() {
                 <Th sortable align="right" active={sortKey === "cles"} direction={sortDirection} onSort={() => onSort("cles")}>
                   Clés
                 </Th>
-                <Th sortable align="right" active={sortKey === "adr"} direction={sortDirection} onSort={() => onSort("adr")}>
-                  ADR
+                <Th sortable align="right" active={sortKey === "caTotal"} direction={sortDirection} onSort={() => onSort("caTotal")}>
+                  CA total
                 </Th>
-                <Th sortable align="right" active={sortKey === "to"} direction={sortDirection} onSort={() => onSort("to")}>
-                  TO
-                </Th>
-                <Th sortable align="right" active={sortKey === "revpar"} direction={sortDirection} onSort={() => onSort("revpar")}>
-                  RevPAR
-                </Th>
-                <Th sortable align="right" active={sortKey === "note"} direction={sortDirection} onSort={() => onSort("note")}>
-                  Note
-                </Th>
+                <Th align="right">CA / clé</Th>
                 <Th>Source</Th>
                 <Th className="w-8" />
               </tr>
@@ -342,17 +335,11 @@ export default function HotelsPage() {
                       <p className="text-[9.5px] text-faint">{hotel.departement}</p>
                     </Td>
                     <Td align="right" className="tabular">{fmtInt(hotel.cles)}</Td>
-                    <Td align="right" className="tabular">
-                      {kpi?.adr != null ? `${fmtNum(kpi.adr, 0)} €` : "—"}
-                    </Td>
-                    <Td align="right" className="tabular">
-                      {kpi?.to != null ? `${fmtNum(kpi.to * 100, 1)} %` : "—"}
-                    </Td>
                     <Td align="right" className="tabular font-medium">
-                      {kpi?.revpar != null ? `${fmtNum(kpi.revpar, 0)} €` : "—"}
+                      {kpi?.caTotal != null ? fmtEuro(kpi.caTotal, true) : "—"}
                     </Td>
                     <Td align="right" className="tabular">
-                      {kpi?.note != null ? fmtNum(kpi.note, 1) : "—"}
+                      {kpi?.caTotal != null && hotel.cles > 0 ? fmtEuro(kpi.caTotal / hotel.cles) : "—"}
                     </Td>
                     <Td>{kpi && <ReliabilityBadge source={kpi.source} />}</Td>
                     <Td>
@@ -381,6 +368,5 @@ export default function HotelsPage() {
 }
 
 function categoryColor(category: Categorie): string {
-  if (category === "Palace") return "#B1844B";
-  return { 1: "#9AA7AE", 2: "#9AA7AE", 3: "#7F98A6", 4: "#3E728D", 5: "#174965" }[category];
+  return CATEGORY_COLOR[String(category)] ?? "#9AA7AE";
 }

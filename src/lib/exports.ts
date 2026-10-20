@@ -37,8 +37,7 @@ interface ExportRow {
 
 const equipmentLabels: { key: keyof Hotel["equipements"]; label: string }[] = [
   { key: "spa", label: "Spa" },
-  { key: "piscineInterieure", label: "Piscine intérieure" },
-  { key: "piscineExterieure", label: "Piscine extérieure" },
+  { key: "piscine", label: "Piscine" },
   { key: "restaurantGastro", label: "Restaurant gastronomique" },
   { key: "brasserie", label: "Brasserie" },
   { key: "bar", label: "Bar" },
@@ -131,7 +130,7 @@ export function hotelExportRow(
   row[`Avis ${annee}`] = numberOrBlank(kpi?.nbAvis);
   row[`CA par clé ${annee} (€)`] =
     kpi?.caTotal && hotel.cles ? Math.round(kpi.caTotal / hotel.cles) : "";
-  row["Donnée démo"] = hotel.demo ? "Oui" : "Non";
+  row["Base compilée"] = hotel.demo ? "Non" : "Oui";
   return row;
 }
 
@@ -192,7 +191,7 @@ function methodologyRows(meta: ExportMeta): (string | number)[][] {
     [],
     [
       "Avertissement",
-      "Jeu de démonstration : les 200 hôtels, indicateurs et transactions sont fictifs. Les ratios calculés (CA/clé, part F&B, m²/clé) ne sont jamais stockés.",
+      "Base compilée : données issues de la BDD transactions hôtelières. Les valeurs absentes ne sont pas extrapolées ; les ratios calculés (CA/clé, part F&B, m²/clé) ne sont jamais stockés.",
     ],
   );
   return lines;
@@ -364,7 +363,7 @@ export async function downloadMapPng(
   context.fillStyle = "#6b747b";
   context.font = `400 ${Math.round(header * 0.15)}px Inter, sans-serif`;
   context.fillText(
-    `Données démo · ${fmtDate(EXTRACTION_DATE)}`,
+    `Base compilée · ${fmtDate(EXTRACTION_DATE)}`,
     Math.round(header * 0.35),
     canvas.height - Math.round(header * 0.07),
   );
@@ -561,7 +560,7 @@ export async function exportMapPptx(input: MapPptxInput): Promise<void> {
       fontFace: "Arial",
     },
   );
-  slide.addText("Données fictives — démonstration", {
+  slide.addText("Base compilée — données de mission", {
     x: panelX,
     y: 6.95,
     w: 3.5,
@@ -611,7 +610,7 @@ export async function exportMapPptx(input: MapPptxInput): Promise<void> {
       { text: "Recherche approfondie : recoupement de sources secondaires.\n\n", options: { color: "39444E", fontSize: 10 } },
       { text: "N3 — ", options: { bold: true, color: "6C7074", fontSize: 10 } },
       { text: "Estimation : hypothèse de travail, affichée en italique, jamais présentée comme vérifiée.\n\n", options: { color: "39444E", fontSize: 10 } },
-      { text: "Les 200 hôtels de ce jeu sont fictifs. Les ratios (CA/clé, part F&B, m²/clé) sont calculés à la volée et ne sont jamais stockés.", options: { italic: true, color: "6B747B", fontSize: 9 } },
+      { text: "Base compilée issue de la BDD transactions hôtelières. Les valeurs absentes ne sont pas extrapolées. Les ratios (CA/clé, part F&B, m²/clé) sont calculés à la volée.", options: { italic: true, color: "6B747B", fontSize: 9 } },
     ],
     {
       x: 6.9,
@@ -622,7 +621,7 @@ export async function exportMapPptx(input: MapPptxInput): Promise<void> {
       lineSpacingMultiple: 1.15,
     },
   );
-  method.addText("NOVA OBSERVATOIRE · Données démo", {
+  method.addText("NOVA OBSERVATOIRE · Base compilée", {
     x: 0.6,
     y: 6.9,
     w: 12,
@@ -863,7 +862,7 @@ export async function exportComparatorPptx({
       color: light ? "D3A07E" : "A8653F",
       fontFace: "Arial",
     });
-    slide.addText(`Données démo · exercice ${annee} · ${fmtDate(EXTRACTION_DATE)}`, {
+    slide.addText(`Base compilée · exercice ${annee} · ${fmtDate(EXTRACTION_DATE)}`, {
       x: 8.2,
       y: 7.1,
       w: 4.5,
@@ -1293,20 +1292,22 @@ export async function exportBenchmarkPptx({
   const positioning = ordered
     .map((hotel, index) => {
       const kpi = kpiFor(hotel.id, kpis, benchmark.annee);
-      if (!kpi || kpi.adr == null || kpi.note == null) return null;
+      if (!kpi || kpi.caTotal == null) return null;
       const sector = sectors.find((item) => item.hotelIds.includes(hotel.id))?.nom ?? "Panel";
       return {
         hotel,
         index: index + 1,
-        adr: kpi.adr,
-        note: kpi.note,
-        revpar: kpi.revpar,
+        caTotal: kpi.caTotal,
+        caParCle: hotel.cles > 0 ? kpi.caTotal / hotel.cles : null,
         keys: hotel.cles,
         secteur: sector,
       };
     })
     .filter((row): row is NonNullable<typeof row> => Boolean(row))
-    .sort((a, b) => b.note - a.note);
+    .sort((a, b) => b.caTotal - a.caTotal);
+  const documentedPanel = panel.filter((hotel) => kpiFor(hotel.id, kpis, benchmark.annee)?.caTotal != null);
+  const documentedCa = documentedPanel.reduce((total, hotel) => total + (kpiFor(hotel.id, kpis, benchmark.annee)?.caTotal ?? 0), 0);
+  const panelKeys = panel.reduce((total, hotel) => total + hotel.cles, 0);
 
   const footer = (slide: PptxGenJS.Slide, light = false) => {
     slide.addText("NOVA OBSERVATOIRE", {
@@ -1314,7 +1315,7 @@ export async function exportBenchmarkPptx({
       charSpacing: 2.5, color: light ? "D3A07E" : "A8653F", fontFace: "Arial",
     });
     slide.addText(
-      `Benchmark v${benchmark.version} · exercice ${benchmark.annee} · données démo · ${fmtDate(EXTRACTION_DATE)}`,
+      `Benchmark v${benchmark.version} · exercice ${benchmark.annee} · base compilée · ${fmtDate(EXTRACTION_DATE)}`,
       { x: 7.6, y: 7.1, w: 5.1, h: 0.22, fontSize: 7, color: light ? "9FB0BC" : "949B9F", align: "right", fontFace: "Arial" },
     );
   };
@@ -1337,19 +1338,19 @@ export async function exportBenchmarkPptx({
     `${fmtDate(benchmark.date)} · ${benchmark.consultant}\n${overview.count} acteurs · ${sectors.length} secteur${sectors.length > 1 ? "s" : ""} · version ${benchmark.version}`,
     { x: 0.8, y: 5.25, w: 8, h: 0.9, fontSize: 10, color: "D8E3EA", fontFace: "Arial", lineSpacingMultiple: 1.3 },
   );
-  title.addText("Document de travail — données fictives, ne pas diffuser", { x: 0.8, y: 6.75, w: 8, h: 0.3, fontSize: 8, italic: true, color: "9FB0BC", fontFace: "Arial" });
+  title.addText("Document de travail — base compilée, ne pas diffuser", { x: 0.8, y: 6.75, w: 8, h: 0.3, fontSize: 8, italic: true, color: "9FB0BC", fontFace: "Arial" });
 
   const synthesis = pptx.addSlide();
   heading(synthesis, "Périmètre & synthèse", `${benchmark.nom} · ${benchmark.client} · exercice ${benchmark.annee}`);
   const metrics: [string, string][] = [
     ["Acteurs", fmtInt(overview.count)],
-    ["Clés", fmtInt(overview.cles)],
-    ["CA cumulé", overview.caTotal != null ? fmtEuro(overview.caTotal, true) : "—"],
-    ["ADR moyen", overview.adr != null ? fmtEuro(overview.adr) : "—"],
-    ["TO moyen", overview.to != null ? fmtTo(overview.to) : "—"],
-    ["RevPAR moyen", overview.revpar != null ? fmtEuro(overview.revpar) : "—"],
-    ["EBITDA moyen", overview.ebitdaPct != null ? `${fmtNum(overview.ebitdaPct * 100, 1)} %` : "—"],
-    ["Note moyenne", overview.note != null ? `${fmtNum(overview.note, 1)}/10` : "—"],
+    ["Clés", fmtInt(panelKeys)],
+    ["Fiches CA", `${documentedPanel.length}/${panel.length}`],
+    ["CA cumulé", documentedPanel.length ? fmtEuro(documentedCa, true) : "—"],
+    ["CA / clé", documentedPanel.length && panelKeys ? fmtEuro(documentedCa / panelKeys) : "—"],
+    ["Secteurs", fmtInt(sectors.length)],
+    ["Référence", panel.find((hotel) => hotel.id === benchmark.referenceId)?.nom ?? "—"],
+    ["Version", `v${benchmark.version}`],
   ];
   metrics.forEach(([label, value], index) => {
     const col = index % 4;
@@ -1390,50 +1391,45 @@ export async function exportBenchmarkPptx({
     { text: "Secteur", options: { bold: true, color: "6B747B", fontSize: 7.5 } },
     { text: "Hôtels", options: { bold: true, color: "6B747B", fontSize: 7.5, align: "right" } },
     { text: "Clés", options: { bold: true, color: "6B747B", fontSize: 7.5, align: "right" } },
+    { text: "Fiches CA", options: { bold: true, color: "6B747B", fontSize: 7.5, align: "right" } },
     { text: "CA cumulé", options: { bold: true, color: "6B747B", fontSize: 7.5, align: "right" } },
-    { text: "ADR moyen", options: { bold: true, color: "6B747B", fontSize: 7.5, align: "right" } },
-    { text: "TO moyen", options: { bold: true, color: "6B747B", fontSize: 7.5, align: "right" } },
-    { text: "RevPAR moyen", options: { bold: true, color: "6B747B", fontSize: 7.5, align: "right" } },
-    { text: "Note", options: { bold: true, color: "6B747B", fontSize: 7.5, align: "right" } },
-    { text: "Leader RevPAR", options: { bold: true, color: "6B747B", fontSize: 7.5 } },
+    { text: "CA / clé", options: { bold: true, color: "6B747B", fontSize: 7.5, align: "right" } },
+    { text: "Leader CA", options: { bold: true, color: "6B747B", fontSize: 7.5 } },
   ]];
   for (const stat of sectorStats.slice(0, 12)) {
+    const documented = stat.hotelIds.filter((id) => kpiFor(id, kpis, benchmark.annee)?.caTotal != null).length;
     sectorRows.push([
       { text: stat.nom, options: { fontSize: 7.4, color: "172029", bold: true } },
       { text: String(stat.count), options: { fontSize: 7.2, color: "39444E", align: "right" } },
       { text: fmtInt(stat.cles), options: { fontSize: 7.2, color: "39444E", align: "right" } },
+      { text: `${documented}/${stat.count}`, options: { fontSize: 7.2, color: "39444E", align: "right" } },
       { text: stat.caTotal != null ? fmtEuro(stat.caTotal, true) : "—", options: { fontSize: 7.2, color: "39444E", align: "right" } },
-      { text: stat.adr != null ? fmtEuro(stat.adr) : "—", options: { fontSize: 7.2, color: "39444E", align: "right" } },
-      { text: stat.to != null ? fmtTo(stat.to) : "—", options: { fontSize: 7.2, color: "39444E", align: "right" } },
-      { text: stat.revpar != null ? fmtEuro(stat.revpar) : "—", options: { fontSize: 7.2, color: "39444E", align: "right" } },
-      { text: stat.note != null ? fmtNum(stat.note, 1) : "—", options: { fontSize: 7.2, color: "39444E", align: "right" } },
+      { text: stat.caTotal != null && stat.cles ? fmtEuro(stat.caTotal / stat.cles) : "—", options: { fontSize: 7.2, color: "39444E", align: "right" } },
       { text: stat.lead?.hotel.nom ?? "—", options: { fontSize: 7, color: "6B747B" } },
     ]);
   }
   sectorSlide.addTable(sectorRows, {
-    x: 0.55, y: 1.35, w: 12.2, colW: [2.0, 0.7, 0.85, 1.35, 1.3, 1.0, 1.45, 0.7, 2.85],
+    x: 0.55, y: 1.35, w: 12.2, colW: [2.7, 0.8, 1.0, 1.1, 1.6, 1.5, 3.5],
     border: { type: "solid", color: "E4DFD5", pt: 0.5 }, rowH: 0.32, valign: "middle", margin: 0.06,
   });
   footer(sectorSlide);
 
-  const positioningSlide = pptx.addSlide();
-  heading(positioningSlide, "Positionnement prix × qualité", "ADR en abscisse, note en ordonnée, taille des marqueurs = nombre de clés.");
-  if (positioningDataUrl) {
+  if (positioningDataUrl && positioning.length > 0) {
+    const positioningSlide = pptx.addSlide();
+    heading(positioningSlide, "CA × productivité", "CA total en abscisse, CA par clé en ordonnée, taille des marqueurs = nombre de clés.");
     positioningSlide.addImage({ data: positioningDataUrl, x: 0.55, y: 1.28, w: 8.35, h: 5.45, sizing: { type: "contain", w: 8.35, h: 5.45 } });
-  } else {
-    positioningSlide.addText("Capture indisponible — le graphique est visible dans l’application.", { x: 0.55, y: 3.2, w: 8.2, h: 0.6, fontSize: 10, color: "6B747B", fontFace: "Arial" });
+    positioningSlide.addText("Lecture rapide", { x: 9.2, y: 1.35, w: 3.6, h: 0.28, fontSize: 10, bold: true, color: "39444E", fontFace: "Arial" });
+    const leaders = positioning.slice(0, 5);
+    positioningSlide.addText(
+      leaders.map((row) => `${row.index}. ${row.hotel.nom} — ${fmtEuro(row.caTotal, true)}${row.caParCle != null ? ` · ${fmtEuro(row.caParCle)}/clé` : ""}`).join("\n"),
+      { x: 9.2, y: 1.7, w: 3.7, h: 2.4, fontSize: 8, color: "6B747B", fontFace: "Arial", lineSpacingMultiple: 1.35 },
+    );
+    positioningSlide.addText(
+      "Les actifs en haut à droite cumulent volume et productivité. Les valeurs de CA absentes du classeur source ne sont ni estimées ni extrapolées.",
+      { x: 9.2, y: 4.35, w: 3.6, h: 1.6, fontSize: 8, italic: true, color: "949B9F", fontFace: "Arial", lineSpacingMultiple: 1.3 },
+    );
+    footer(positioningSlide);
   }
-  positioningSlide.addText("Lecture rapide", { x: 9.2, y: 1.35, w: 3.6, h: 0.28, fontSize: 10, bold: true, color: "39444E", fontFace: "Arial" });
-  const leaders = positioning.slice(0, 5);
-  positioningSlide.addText(
-    leaders.map((row) => `${row.index}. ${row.hotel.nom} — ${fmtNum(row.note, 1)}/10 · ${fmtEuro(row.adr)}`).join("\n"),
-    { x: 9.2, y: 1.7, w: 3.7, h: 2.4, fontSize: 8, color: "6B747B", fontFace: "Arial", lineSpacingMultiple: 1.35 },
-  );
-  positioningSlide.addText(
-    "Les positions hautes à droite signalent un positionnement premium crédible ; les écarts de note et d’ADR doivent être lus avec la fiabilité de chaque source.",
-    { x: 9.2, y: 4.35, w: 3.6, h: 1.6, fontSize: 8, italic: true, color: "949B9F", fontFace: "Arial", lineSpacingMultiple: 1.3 },
-  );
-  footer(positioningSlide);
 
   for (let start = 0; start < ordered.length; start += 18) {
     const chunk = ordered.slice(start, start + 18);
@@ -1445,10 +1441,8 @@ export async function exportBenchmarkPptx({
       { text: "Ville", options: { bold: true, color: "6B747B", fontSize: 7 } },
       { text: "Cat.", options: { bold: true, color: "6B747B", fontSize: 7 } },
       { text: "Clés", options: { bold: true, color: "6B747B", fontSize: 7, align: "right" } },
-      { text: "ADR", options: { bold: true, color: "6B747B", fontSize: 7, align: "right" } },
-      { text: "TO", options: { bold: true, color: "6B747B", fontSize: 7, align: "right" } },
-      { text: "RevPAR", options: { bold: true, color: "6B747B", fontSize: 7, align: "right" } },
-      { text: "Note", options: { bold: true, color: "6B747B", fontSize: 7, align: "right" } },
+      { text: "CA total", options: { bold: true, color: "6B747B", fontSize: 7, align: "right" } },
+      { text: "CA / clé", options: { bold: true, color: "6B747B", fontSize: 7, align: "right" } },
     ]];
     chunk.forEach((hotel, offset) => {
       const kpi = kpiFor(hotel.id, kpis, benchmark.annee);
@@ -1458,14 +1452,12 @@ export async function exportBenchmarkPptx({
         { text: hotel.ville, options: { fontSize: 7, color: "39444E" } },
         { text: hotel.categorie === "Palace" ? "Palace" : `${hotel.categorie}★`, options: { fontSize: 7, color: "39444E" } },
         { text: fmtInt(hotel.cles), options: { fontSize: 7, color: "39444E", align: "right" } },
-        { text: pptText(kpi?.adr, "adr"), options: { fontSize: 7, color: "39444E", align: "right" } },
-        { text: pptText(kpi?.to, "to"), options: { fontSize: 7, color: "39444E", align: "right" } },
-        { text: pptText(kpi?.revpar, "revpar"), options: { fontSize: 7, color: "39444E", align: "right" } },
-        { text: kpi?.note != null ? `${fmtNum(kpi.note, 1)}/10` : "—", options: { fontSize: 7, color: "39444E", align: "right" } },
+        { text: kpi?.caTotal != null ? fmtEuro(kpi.caTotal, true) : "—", options: { fontSize: 7, color: "39444E", align: "right" } },
+        { text: kpi?.caTotal != null && hotel.cles > 0 ? fmtEuro(kpi.caTotal / hotel.cles) : "—", options: { fontSize: 7, color: "39444E", align: "right" } },
       ]);
     });
     panelSlide.addTable(rows, {
-      x: 0.55, y: 1.3, w: 12.2, colW: [0.4, 3.4, 1.7, 0.8, 0.8, 1.1, 0.9, 1.2, 1.1],
+      x: 0.55, y: 1.3, w: 12.2, colW: [0.4, 4.0, 2.0, 0.8, 0.9, 1.7, 1.5],
       border: { type: "solid", color: "E4DFD5", pt: 0.5 }, rowH: 0.28, valign: "middle", margin: 0.05,
     });
     footer(panelSlide);

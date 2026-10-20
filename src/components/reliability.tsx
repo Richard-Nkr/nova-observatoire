@@ -16,13 +16,14 @@ export function ReliabilityBadge({
   className?: string;
   showText?: boolean;
 }) {
-  const meta = RELIABILITY_META[source.fiabilite];
+  const meta = RELIABILITY_META[source.fiabilite] ?? RELIABILITY_META.N2;
+  const fiabilite = RELIABILITY_META[source.fiabilite] ? source.fiabilite : "—";
   return (
     <Tooltip
       content={
         <span className="block space-y-1">
           <span className="block font-semibold tracking-wide">
-            {source.fiabilite} · {meta.description}
+            {fiabilite} · {meta.description}
           </span>
           <span className="block text-white/80">{source.source}</span>
           <span className="block text-white/60">
@@ -39,7 +40,7 @@ export function ReliabilityBadge({
       <span
         className={cn(
           "inline-flex cursor-help items-center gap-1 rounded-[2px] border px-1 py-[1px] text-[9.5px] font-semibold leading-[14px] tracking-[0.04em]",
-          source.fiabilite === "N3" && "italic",
+          fiabilite === "N3" && "italic",
           className,
         )}
         style={{
@@ -48,7 +49,7 @@ export function ReliabilityBadge({
           borderColor: meta.border,
         }}
       >
-        {source.fiabilite}
+        {fiabilite}
         {showText && <span className="font-normal">{meta.description}</span>}
       </span>
     </Tooltip>
@@ -125,7 +126,7 @@ export function DemoStamp({ className }: { className?: string }) {
         className,
       )}
     >
-      Démo
+      Compilé
     </span>
   );
 }

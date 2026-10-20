@@ -14,7 +14,7 @@ import type { Benchmark, KpiKey } from "@/lib/types";
 import { fmtInt } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-const DEFAULT_KPIS: KpiKey[] = ["adr", "to", "revpar", "caTotal", "ebitdaPct", "note"];
+const DEFAULT_KPIS: KpiKey[] = ["caTotal", "caParCle", "cles"];
 
 export function BenchmarkDialog({
   open,

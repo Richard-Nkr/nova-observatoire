@@ -25,7 +25,7 @@ import type {
   User,
 } from "./types";
 
-const STORAGE_KEY = "nova-observatoire-v1";
+const STORAGE_KEY = "nova-observatoire-v2";
 
 export interface KpiUpsertPayload {
   hotelId: string;
@@ -90,7 +90,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const parsed = JSON.parse(raw) as AppState;
         if (parsed?.hotels?.length) {
           // eslint-disable-next-line react-hooks/set-state-in-effect
-          setState({ ...buildInitialState(), ...parsed, kpiHistory: parsed.kpiHistory ?? [] });
+          setState({
+            ...buildInitialState(),
+            ...parsed,
+            kpiHistory: parsed.kpiHistory ?? [],
+            exploitations: parsed.exploitations ?? [],
+            priceObservations: parsed.priceObservations ?? [],
+            miceObservations: parsed.miceObservations ?? [],
+            valuations: parsed.valuations ?? [],
+            identities: parsed.identities ?? [],
+          });
         }
       }
     } catch {
@@ -315,7 +324,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         audit: appendAudit(prev, {
           action: "Ajout d'une transaction",
           target: prev.hotels.find((hotel) => hotel.id === transaction.hotelId)?.nom ?? transaction.hotelId,
-          details: `${transaction.type} — ${transaction.prix.toLocaleString("fr-FR")} €`,
+          details:
+            transaction.prix !== null
+              ? `${transaction.type ?? "Nature non documentée"} — ${transaction.prix.toLocaleString("fr-FR")} €`
+              : transaction.caAvant !== null || transaction.caApres !== null
+                ? "Transaction documentée par CA avant/après"
+                : "Transaction sans prix ni CA documenté",
           confidential: transaction.confidentielClient,
         }),
       }));

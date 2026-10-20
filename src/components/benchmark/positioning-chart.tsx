@@ -15,31 +15,29 @@ import {
 } from "recharts";
 import type { Hotel } from "@/lib/types";
 import { CHART_COLORS, ChartFrame } from "@/components/charts";
-import { fmtEuro, fmtInt, fmtNum } from "@/lib/format";
+import { fmtEuro, fmtInt } from "@/lib/format";
 
 export const SECTOR_COLORS = ["#a8653f", "#174965", "#256b4e", "#9a5d10", "#7f98a6", "#6c7074", "#8b6b9e"];
 
 export interface PositioningRow {
   hotel: Hotel;
   index: number;
-  adr: number;
-  note: number;
-  revpar: number | null;
+  caTotal: number;
+  caParCle: number | null;
   keys: number;
   secteur: string;
 }
 
-/** Prix × qualité : ADR en abscisse, note en ordonnée, taille = nombre de clés. */
+/**
+ * CA × productivité : chiffre d'affaires total en abscisse, CA par clé en
+ * ordonnée, taille = nombre de clés. Les actifs sans CA ou sans clé sont exclus.
+ */
 export function PositioningChart({
   rows,
   sectors,
-  meanAdr,
-  meanNote,
 }: {
   rows: PositioningRow[];
   sectors: string[];
-  meanAdr: number | null;
-  meanNote: number | null;
 }) {
   const [active, setActive] = React.useState<PositioningRow | null>(null);
   const grouped = sectors
@@ -49,6 +47,15 @@ export function PositioningChart({
       rows: rows.filter((row) => row.secteur === sector),
     }))
     .filter((group) => group.rows.length > 0);
+  const meanCa =
+    rows.length > 0 ? rows.reduce((total, row) => total + row.caTotal, 0) / rows.length : null;
+  const productivity = rows
+    .map((row) => row.caParCle)
+    .filter((value): value is number => value != null);
+  const meanCaParCle =
+    productivity.length > 0
+      ? productivity.reduce((total, value) => total + value, 0) / productivity.length
+      : null;
 
   return (
     <div>
@@ -58,30 +65,29 @@ export function PositioningChart({
             <CartesianGrid stroke={CHART_COLORS.line} strokeDasharray="2 4" />
             <XAxis
               type="number"
-              dataKey="adr"
-              name="ADR"
+              dataKey="caTotal"
+              name="CA total"
               tick={{ fontSize: 9.5, fill: "#6b747b" }}
-              tickFormatter={(value) => `${fmtInt(Number(value))} €`}
+              tickFormatter={(value) => fmtEuro(Number(value), true)}
               axisLine={false}
               tickLine={false}
-              domain={["dataMin - 25", "dataMax + 30"]}
-              label={{ value: "ADR (€ HT)", position: "insideBottom", offset: -8, fontSize: 9, fill: "#949b9f" }}
+              domain={[0, "dataMax + 1500000"]}
+              label={{ value: "CA total (€)", position: "insideBottom", offset: -8, fontSize: 9, fill: "#949b9f" }}
             />
             <YAxis
               type="number"
-              dataKey="note"
-              name="Note"
-              domain={[0, 10]}
+              dataKey="caParCle"
+              name="CA / clé"
               tick={{ fontSize: 9.5, fill: "#6b747b" }}
-              tickFormatter={(value) => fmtNum(Number(value), 1)}
+              tickFormatter={(value) => `${fmtInt(Number(value) / 1000)} k€`}
               axisLine={false}
               tickLine={false}
-              width={28}
-              label={{ value: "Note /10", angle: -90, position: "insideLeft", fontSize: 9, fill: "#949b9f" }}
+              width={44}
+              label={{ value: "CA / clé (€)", angle: -90, position: "insideLeft", fontSize: 9, fill: "#949b9f" }}
             />
             <ZAxis type="number" dataKey="keys" range={[45, 440]} />
-            {meanAdr != null && <ReferenceLine x={meanAdr} stroke={CHART_COLORS.copper} strokeDasharray="4 4" />}
-            {meanNote != null && <ReferenceLine y={meanNote} stroke={CHART_COLORS.copper} strokeDasharray="4 4" />}
+            {meanCa != null && <ReferenceLine x={meanCa} stroke={CHART_COLORS.copper} strokeDasharray="4 4" />}
+            {meanCaParCle != null && <ReferenceLine y={meanCaParCle} stroke={CHART_COLORS.copper} strokeDasharray="4 4" />}
             {grouped.map((group) => (
               <Scatter
                 key={group.sector}
@@ -102,8 +108,8 @@ export function PositioningChart({
                   <div className="rounded-[3px] border border-line-strong bg-surface px-2.5 py-2 text-[11px] shadow-[0_8px_28px_rgba(15,36,51,0.16)]">
                     <p className="font-medium text-ink">{active.hotel.nom}</p>
                     <p className="mt-0.5 text-[10px] text-faint">{active.secteur} · {fmtInt(active.keys)} clés</p>
-                    <p className="mt-1 tabular text-ink-soft">ADR {fmtEuro(active.adr)} · Note {fmtNum(active.note, 1)}/10</p>
-                    <p className="tabular text-ink-soft">RevPAR {active.revpar != null ? fmtEuro(active.revpar) : "—"}</p>
+                    <p className="mt-1 tabular text-ink-soft">CA {fmtEuro(active.caTotal)}</p>
+                    <p className="tabular text-ink-soft">CA / clé {active.caParCle != null ? fmtEuro(active.caParCle) : "—"}</p>
                   </div>
                 ) : null
               }

@@ -162,7 +162,7 @@ export default function AdminPage() {
     setResetOpen(false);
     setTab("users");
     toast({
-      title: "Démonstration réinitialisée",
+      title: "Base réinitialisée",
       description: "Hôtels, KPI, imports, tâches et utilisateurs ont été restaurés.",
       tone: "success",
     });
@@ -541,16 +541,16 @@ export default function AdminPage() {
             <div>
               <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-danger">
                 <RotateCcw className="size-3.5" />
-                Zone de démonstration
+                Zone de réinitialisation
               </p>
               <p className="mt-1 text-[11.5px] text-muted">
-                Restaure les 200 hôtels fictifs, les KPI, transactions, benchmarks, imports et
+                Restaure la base compilée, les KPI, transactions, benchmarks, imports et
                 utilisateurs d’origine. Les saisies locales seront perdues.
               </p>
             </div>
             <Button variant="danger" size="md" onClick={() => setResetOpen(true)}>
               <RotateCcw />
-              Réinitialiser la démo
+              Réinitialiser la base
             </Button>
           </div>
         </Card>
@@ -559,7 +559,7 @@ export default function AdminPage() {
       <footer className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3 text-[10px] text-faint">
         <p className="flex items-center gap-1.5">
           <KeyRound className="size-3" />
-          NOVA Observatoire · Environnement de démonstration · Contrôles d’accès simulés
+          NOVA Observatoire · Base compilée · Données de mission
         </p>
         <p>Les données affichées sont fictives et clairement identifiées.</p>
       </footer>
@@ -569,7 +569,7 @@ export default function AdminPage() {
       <Dialog open={resetOpen} onOpenChange={setResetOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader
-            title="Réinitialiser la démonstration ?"
+            title="Réinitialiser la basenstration ?"
             description="Cette action supprime toutes les modifications locales et recharge le jeu de données initial."
           />
           <DialogBody>

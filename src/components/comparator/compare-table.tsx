@@ -13,10 +13,10 @@ import { cn } from "@/lib/utils";
 import { fmtInt } from "@/lib/format";
 
 const GROUPS: { label: string; keys: KpiKey[] }[] = [
-  { label: "Performance", keys: ["caTotal", "adr", "to", "revpar", "ebitdaPct", "note"] },
+  { label: "Performance documentée", keys: ["caTotal"] },
   {
-    label: "Structure, mix et productivité",
-    keys: ["cles", "caParCle", "caFnb", "partFnb", "surfaceTotale", "m2ParCle", "effectif"],
+    label: "Structure et productivité",
+    keys: ["cles", "caParCle", "surfaceTotale"],
   },
 ];
 

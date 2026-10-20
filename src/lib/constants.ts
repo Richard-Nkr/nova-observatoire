@@ -10,19 +10,20 @@ import type {
 
 export const APP_NAME = "Observatoire Hôtelier";
 export const BRAND = "NOVA OBSERVATOIRE";
-export const DEMO_LABEL = "Démo · données fictives";
-export const CURRENT_DATA_YEAR = 2025;
+export const DEMO_LABEL = "Base compilée · données de mission";
+export const CURRENT_DATA_YEAR = 2024;
 export const EXTRACTION_DATE = "2026-10-20";
 
-export const YEARS = [2021, 2022, 2023, 2024, 2025];
+export const YEARS = [2020, 2021, 2022, 2023, 2024, 2025];
 
-export const CATEGORIES: Categorie[] = [2, 3, 4, 5, "Palace"];
+export const CATEGORIES: Categorie[] = [2, 3, 4, 5, "Palace", "Non classé"];
 export const CATEGORY_LABEL: Record<string, string> = {
   "2": "2★",
   "3": "3★",
   "4": "4★",
   "5": "5★",
   Palace: "Palace",
+  "Non classé": "Non classé",
 };
 
 export const CATEGORY_COLOR: Record<string, string> = {
@@ -31,6 +32,7 @@ export const CATEGORY_COLOR: Record<string, string> = {
   "4": "#3E728D",
   "5": "#174965",
   Palace: "#B1844B",
+  "Non classé": "#A8A39A",
 };
 
 export const GAMMES: Gamme[] = [
@@ -38,6 +40,7 @@ export const GAMMES: Gamme[] = [
   "Milieu de gamme",
   "Upscale",
   "Luxe",
+  "Non renseigné",
 ];
 
 export const HOTEL_TYPES: HotelType[] = [
@@ -46,6 +49,7 @@ export const HOTEL_TYPES: HotelType[] = [
   "Resort",
   "Boutique",
   "Patrimonial",
+  "Non renseigné",
 ];
 
 export const EXPLOITATIONS: Exploitation[] = [
@@ -53,17 +57,10 @@ export const EXPLOITATIONS: Exploitation[] = [
   "Franchise",
   "Contrat de gestion",
   "Intégré",
+  "Non renseigné",
 ];
 
-export const GROUPES = [
-  "Groupe Aurore",
-  "Collection Mansart",
-  "Groupe Solstice",
-  "Nordis Hospitality",
-  "Hôtels Albatros",
-  "Maison Néra",
-  "Indépendant",
-];
+export const GROUPES = ["Non renseigné"];
 
 export const RELIABILITY_META: Record<
   Fiabilite,
@@ -126,17 +123,9 @@ export const KPI_LABELS: Record<KpiKey, { label: string; unit: string; short: st
 
 export const COMPARATOR_KPIS: KpiKey[] = [
   "caTotal",
-  "adr",
-  "to",
-  "revpar",
   "caParCle",
-  "caFnb",
-  "ebitdaPct",
-  "note",
-  "effectif",
+  "cles",
   "surfaceTotale",
-  "partFnb",
-  "m2ParCle",
 ];
 
 export const MARKET_ZONES = [
@@ -146,6 +135,15 @@ export const MARKET_ZONES = [
   "Provence-Alpes-Côte d'Azur",
   "Occitanie",
   "Nouvelle-Aquitaine",
+  "Grand Est",
+  "Hauts-de-France",
+  "Bretagne",
+  "Pays de la Loire",
+  "Centre-Val de Loire",
+  "Bourgogne-Franche-Comté",
+  "Normandie",
+  "Corse",
+  "Martinique",
 ];
 
 export const MISSIONS = [

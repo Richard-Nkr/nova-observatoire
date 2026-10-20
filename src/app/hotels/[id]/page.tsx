@@ -35,7 +35,7 @@ import {
   RELIABILITY_META,
   YEARS,
 } from "@/lib/constants";
-import { fmtDate, fmtDateTime, fmtInitials, fmtInt, fmtNum } from "@/lib/format";
+import { fmtDate, fmtDateTime, fmtEuro, fmtInitials, fmtInt, fmtNum } from "@/lib/format";
 import {
   categoryFamily,
   EQUIPMENT_ROWS,
@@ -86,7 +86,7 @@ export default function HotelDetailPage() {
       <EmptyState
         icon={<Building2 className="size-8" />}
         title="Fiche introuvable"
-        description="Cet établissement n’existe pas ou a été supprimé de la base de démonstration."
+        description="Cet établissement n’existe pas ou a été supprimé de la base."
         action={
           <Button variant="outline" size="sm" onClick={() => router.push("/hotels")}>
             <ArrowLeft className="size-3.5" />
@@ -132,9 +132,10 @@ export default function HotelDetailPage() {
   const chartData = kpiYears.map((kpi) => ({
     annee: kpi.annee,
     ca: kpi.caTotal ? Math.round(kpi.caTotal / 1_000_000 * 10) / 10 : null,
-    revpar: kpi.revpar,
-    adr: kpi.adr,
-    to: kpi.to != null ? Math.round(kpi.to * 1000) / 10 : null,
+    caParCle:
+      kpi.caTotal != null && hotel.cles
+        ? Math.round(kpi.caTotal / hotel.cles)
+        : null,
   }));
 
   const journal = state.audit
@@ -155,8 +156,10 @@ export default function HotelDetailPage() {
 
   const previousYear = kpiYears.find((kpi) => kpi.annee === annee - 1);
   const deltas = {
-    adr: delta(currentKpi?.adr, previousYear?.adr),
-    revpar: delta(currentKpi?.revpar, previousYear?.revpar),
+    caParCle: delta(
+      currentKpi?.caTotal != null && hotel.cles ? currentKpi.caTotal / hotel.cles : null,
+      previousYear?.caTotal != null && hotel.cles ? previousYear.caTotal / hotel.cles : null,
+    ),
     to:
       currentKpi?.to != null && previousYear?.to != null
         ? (currentKpi.to - previousYear.to) * 100
@@ -190,10 +193,18 @@ export default function HotelDetailPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <CategoryBadge categorie={hotel.categorie} />
                   <span className="text-[10.5px] text-muted">{hotel.gamme}</span>
-                  <span className="text-[10.5px] text-faint">·</span>
-                  <span className="text-[10.5px] text-muted">{hotel.type}</span>
-                  <span className="text-[10.5px] text-faint">·</span>
-                  <span className="text-[10.5px] text-muted">{hotel.exploitation}</span>
+                  {hotel.type !== "Non renseigné" && (
+                    <>
+                      <span className="text-[10.5px] text-faint">·</span>
+                      <span className="text-[10.5px] text-muted">{hotel.type}</span>
+                    </>
+                  )}
+                  {hotel.exploitation !== "Non renseigné" && (
+                    <>
+                      <span className="text-[10.5px] text-faint">·</span>
+                      <span className="text-[10.5px] text-muted">{hotel.exploitation}</span>
+                    </>
+                  )}
                   {hotel.demo && <DemoStamp />}
                 </div>
                 <h1 className="mt-1.5 font-serif text-[32px] leading-tight tracking-[-0.02em] text-ink">
@@ -201,13 +212,15 @@ export default function HotelDetailPage() {
                 </h1>
                 <p className="mt-1 flex flex-wrap items-center gap-1.5 text-[12px] text-muted">
                   <MapPin className="size-3.5 text-faint" />
-                  {hotel.adresse}, {hotel.codePostal} {hotel.ville}
+                  {[hotel.adresse, [hotel.codePostal, hotel.ville].filter(Boolean).join(" ")].filter(Boolean).join(", ")}
                   <span className="text-faint">·</span>
                   {hotel.departement}, {hotel.region}
                 </p>
                 <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted">
-                  <span>{hotel.groupe}</span>
-                  <span>Enseigne : {hotel.enseigne}</span>
+                  {hotel.groupe !== "Non renseigné" && <span>{hotel.groupe}</span>}
+                  {hotel.enseigne && hotel.enseigne !== "Non renseigné" && (
+                    <span>Enseigne : {hotel.enseigne}</span>
+                  )}
                   <span className="inline-flex items-center gap-1">
                     <BedDouble className="size-3.5 text-faint" />
                     {fmtInt(hotel.cles)} clés
@@ -250,65 +263,35 @@ export default function HotelDetailPage() {
                 delta={delta(currentKpi?.caTotal, previousYear?.caTotal)}
               />
               <MetricCell
-                label="ADR"
-                value={currentKpi?.adr ?? null}
+                label="CA / clé"
+                value={currentKpi?.caTotal != null && hotel.cles ? currentKpi.caTotal / hotel.cles : null}
                 format={(value) => `${fmtNum(value, 0)} €`}
                 source={currentKpi?.source}
-                delta={deltas.adr}
+                delta={deltas.caParCle}
+              />
+              <MetricCell label="Clés" value={hotel.cles || null} format={(value) => fmtInt(value)} />
+              <MetricCell
+                label="Surface totale"
+                value={hotel.surfaceTotale ?? null}
+                format={(value) => `${fmtInt(value)} m²`}
               />
               <MetricCell
-                label="TO"
-                value={currentKpi?.to != null ? currentKpi.to * 100 : null}
-                format={(value) => `${fmtNum(value, 1)} %`}
-                source={currentKpi?.source}
-                delta={deltas.to}
-                deltaUnit="pts"
+                label="Transactions"
+                value={transactions.length}
+                format={(value) => fmtInt(value)}
               />
               <MetricCell
-                label="RevPAR"
-                value={currentKpi?.revpar ?? null}
-                format={(value) => `${fmtNum(value, 0)} €`}
-                source={currentKpi?.source}
-                delta={deltas.revpar}
-              />
-              <MetricCell
-                label="EBITDA"
-                value={currentKpi?.ebitdaPct != null ? currentKpi.ebitdaPct * 100 : null}
-                format={(value) => `${fmtNum(value, 1)} %`}
-                source={currentKpi?.source}
-                delta={
-                  currentKpi?.ebitdaPct != null && previousYear?.ebitdaPct != null
-                    ? (currentKpi.ebitdaPct - previousYear.ebitdaPct) * 100
-                    : null
-                }
-                deltaUnit="pts"
-              />
-              <MetricCell
-                label="Note"
-                value={currentKpi?.note ?? null}
-                format={(value) => `${fmtNum(value, 1)} / 10`}
-                source={currentKpi?.source}
-                delta={
-                  currentKpi?.note != null && previousYear?.note != null
-                    ? currentKpi.note - previousYear.note
-                    : null
-                }
+                label="Exercice"
+                value={currentKpi?.annee ?? null}
+                format={(value) => String(value)}
               />
             </div>
             <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[10px] text-faint">
               <span>
-                Variantes calculées : CA/clé{" "}
-                {currentKpi?.caTotal && hotel.cles
-                  ? `${fmtNum(currentKpi.caTotal / hotel.cles, 0)} €`
-                  : "—"}{" "}
-                · part F&amp;B{" "}
-                {currentKpi?.caFnb && currentKpi?.caTotal
-                  ? `${fmtNum((currentKpi.caFnb / currentKpi.caTotal) * 100, 1)} %`
-                  : "—"}{" "}
-                · m²/clé{" "}
+                Exercice de référence {currentKpi?.annee ?? "—"} · CA issu de {currentKpi?.source.source ?? "source non documentée"}
                 {hotel.surfaceTotale && hotel.cles
-                  ? `${fmtNum(hotel.surfaceTotale / hotel.cles, 1)} m²`
-                  : "—"}
+                  ? ` · m²/clé ${fmtNum(hotel.surfaceTotale / hotel.cles, 1)} m²`
+                  : ""}
               </span>
               <Button
                 variant="ghost"
@@ -323,20 +306,29 @@ export default function HotelDetailPage() {
             </div>
           </div>
           <div className="relative min-h-[210px] border-t border-line lg:border-l lg:border-t-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={hotel.photoUrl}
-              alt={`Illustration de ${hotel.nom}`}
-              className="absolute inset-0 h-full w-full object-cover"
-              loading="lazy"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-navy/65 via-navy/5 to-transparent" />
+            {hotel.photoUrl ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={hotel.photoUrl}
+                  alt={`Illustration de ${hotel.nom}`}
+                  className="absolute inset-0 h-full w-full object-cover"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-navy/65 via-navy/5 to-transparent" />
+              </>
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-[linear-gradient(135deg,#173447,#0f2433)] px-5 text-center">
+                <Building2 className="size-6 text-white/25" aria-hidden />
+                <p className="mt-2 text-[9px] font-semibold uppercase tracking-[0.16em] text-white/40">
+                  Photographie non documentée
+                </p>
+                <p className="mt-1 text-[11px] text-white/70">{hotel.ville} · {hotel.region}</p>
+              </div>
+            )}
             <div className="absolute inset-x-0 bottom-0 p-3">
-              <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-white/60">
-                Illustration non contractuelle
-              </p>
-              <p className="mt-0.5 text-[10.5px] text-white/85">
-                {hotel.proprietaire} · exploité par {hotel.exploitant}
+              <p className="text-[10.5px] text-white/85">
+                {hotel.localisation || hotel.ville} · base compilée
               </p>
             </div>
           </div>
@@ -424,7 +416,7 @@ export default function HotelDetailPage() {
                     chartTab === "ca" ? "bg-navy text-white" : "text-ink-soft",
                   )}
                 >
-                  CA &amp; RevPAR
+                  CA total
                 </button>
                 <button
                   type="button"
@@ -434,7 +426,7 @@ export default function HotelDetailPage() {
                     chartTab === "prix" ? "bg-navy text-white" : "text-ink-soft",
                   )}
                 >
-                  ADR &amp; TO
+                  CA par clé
                 </button>
               </div>
             </div>
@@ -445,21 +437,17 @@ export default function HotelDetailPage() {
                     <CartesianGrid stroke={CHART_COLORS.line} vertical={false} />
                     <XAxis dataKey="annee" tick={{ fontSize: 10, fill: "#6b747b" }} axisLine={false} tickLine={false} />
                     <YAxis yAxisId="ca" tick={{ fontSize: 9, fill: "#949b9f" }} axisLine={false} tickLine={false} width={44} />
-                    <YAxis yAxisId="revpar" orientation="right" tick={{ fontSize: 9, fill: "#949b9f" }} axisLine={false} tickLine={false} width={36} />
-                    <Tooltip content={<ChartTip formatter={(value, name) => name === "CA (M€)" ? `${value} M€` : `${Math.round(value)} €`} />} />
+                    <Tooltip content={<ChartTip formatter={(value) => `${value} M€`} />} />
                     <Bar yAxisId="ca" dataKey="ca" name="CA (M€)" fill={CHART_COLORS.navy} barSize={26} radius={[1, 1, 0, 0]} />
-                    <Line yAxisId="revpar" dataKey="revpar" name="RevPAR (€)" stroke={CHART_COLORS.copper} strokeWidth={1.6} dot={{ r: 2.5, fill: CHART_COLORS.copper }} connectNulls />
                   </ComposedChart>
                 </ResponsiveContainer>
               ) : (
                 <LineChart data={chartData} margin={{ top: 5, right: 8, left: -12, bottom: 0 }}>
                   <CartesianGrid stroke={CHART_COLORS.line} vertical={false} />
                   <XAxis dataKey="annee" tick={{ fontSize: 10, fill: "#6b747b" }} axisLine={false} tickLine={false} />
-                  <YAxis yAxisId="adr" tick={{ fontSize: 9, fill: "#949b9f" }} axisLine={false} tickLine={false} width={40} />
-                  <YAxis yAxisId="to" orientation="right" tick={{ fontSize: 9, fill: "#949b9f" }} axisLine={false} tickLine={false} width={34} />
-                  <Tooltip content={<ChartTip formatter={(value, name) => name === "TO (%)" ? `${value} %` : `${Math.round(value)} €`} />} />
-                  <Line yAxisId="adr" dataKey="adr" name="ADR (€)" stroke={CHART_COLORS.navy} strokeWidth={1.6} dot={{ r: 2.5, fill: CHART_COLORS.navy }} connectNulls />
-                  <Line yAxisId="to" dataKey="to" name="TO (%)" stroke={CHART_COLORS.copper} strokeWidth={1.6} dot={{ r: 2.5, fill: CHART_COLORS.copper }} connectNulls />
+                  <YAxis yAxisId="adr" tick={{ fontSize: 9, fill: "#949b9f" }} axisLine={false} tickLine={false} width={48} />
+                  <Tooltip content={<ChartTip formatter={(value) => `${Math.round(value)} €`} />} />
+                  <Line yAxisId="adr" dataKey="caParCle" name="CA / clé (€)" stroke={CHART_COLORS.copper} strokeWidth={1.6} dot={{ r: 2.5, fill: CHART_COLORS.copper }} connectNulls />
                 </LineChart>
               )}
             </ChartFrame>
@@ -470,10 +458,6 @@ export default function HotelDetailPage() {
                   <Th>Exercice</Th>
                   <Th align="right">CA total</Th>
                   <Th align="right">CA/clé</Th>
-                  <Th align="right">ADR</Th>
-                  <Th align="right">TO</Th>
-                  <Th align="right">RevPAR</Th>
-                  <Th align="right">EBITDA %</Th>
                   <Th>Source</Th>
                 </tr>
               </thead>
@@ -483,10 +467,6 @@ export default function HotelDetailPage() {
                     <Td className="font-medium text-ink">{kpi.annee}</Td>
                     <Td align="right">{kpi.caTotal != null ? `${fmtNum(kpi.caTotal / 1_000_000, 2)} M€` : "—"}</Td>
                     <Td align="right">{kpi.caTotal && hotel.cles ? `${fmtNum(kpi.caTotal / hotel.cles, 0)} €` : "—"}</Td>
-                    <Td align="right">{kpi.adr != null ? `${fmtNum(kpi.adr, 0)} €` : "—"}</Td>
-                    <Td align="right">{kpi.to != null ? `${fmtNum(kpi.to * 100, 1)} %` : "—"}</Td>
-                    <Td align="right">{kpi.revpar != null ? `${fmtNum(kpi.revpar, 0)} €` : "—"}</Td>
-                    <Td align="right">{kpi.ebitdaPct != null ? `${fmtNum(kpi.ebitdaPct * 100, 1)} %` : "—"}</Td>
                     <Td>
                       <div className="flex items-center gap-1">
                         <ReliabilityBadge source={kpi.source} />
@@ -508,30 +488,44 @@ export default function HotelDetailPage() {
                 <thead>
                   <tr>
                     <Th>Date</Th>
-                    <Th>Acquéreur</Th>
-                    <Th>Cédant</Th>
-                    <Th align="right">Prix</Th>
-                    <Th align="right">Prix/clé</Th>
-                    <Th>Nature</Th>
+                    <Th align="right">CA avant</Th>
+                    <Th align="right">CA après</Th>
+                    <Th>Gamme</Th>
+                    <Th>Clés</Th>
+                    <Th>Analyste</Th>
                     <Th>Source</Th>
                   </tr>
                 </thead>
                 <tbody>
                   {transactions.map((transaction) => (
                     <tr key={transaction.id}>
-                      <Td>{fmtDate(transaction.date)}</Td>
-                      <Td>{transaction.acheteur}</Td>
-                      <Td>{transaction.vendeur}</Td>
-                      <Td align="right">{fmtNum(transaction.prix / 1_000_000, 1)} M€</Td>
-                      <Td align="right">{fmtNum(transaction.prixParCle, 0)} €</Td>
                       <Td>
-                        {transaction.type}
+                        {fmtDate(transaction.date)}
                         {transaction.confidentielClient && (
                           <span className="ml-1 rounded-[2px] bg-accent-soft px-1 text-[8.5px] font-semibold uppercase tracking-wide text-accent">
                             client
                           </span>
                         )}
                       </Td>
+                      <Td align="right">
+                        <div>{transaction.caAvant !== null ? fmtEuro(transaction.caAvant, true) : "—"}</div>
+                        <div className="text-[9.5px] text-faint">{transaction.exerciceCaAvant ?? "exercice non renseigné"}</div>
+                      </Td>
+                      <Td align="right">
+                        <div>{transaction.caApres !== null ? fmtEuro(transaction.caApres, true) : "—"}</div>
+                        <div className="text-[9.5px] text-faint">{transaction.exerciceCaApres ?? "exercice non renseigné"}</div>
+                      </Td>
+                      <Td>
+                        {transaction.gammeAvant ?? "—"}
+                        <span className="mx-1 text-faint">→</span>
+                        {transaction.gammeApres ?? "—"}
+                      </Td>
+                      <Td>
+                        {transaction.clesAvant !== null ? fmtInt(transaction.clesAvant) : "—"}
+                        <span className="mx-1 text-faint">→</span>
+                        {transaction.clesApres !== null ? fmtInt(transaction.clesApres) : "—"}
+                      </Td>
+                      <Td>{transaction.analyste ?? "—"}</Td>
                       <Td><ReliabilityBadge source={transaction.source} /></Td>
                     </tr>
                   ))}

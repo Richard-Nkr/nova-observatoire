@@ -35,9 +35,9 @@ import {
   sortHotels,
   type SortDirection,
 } from "@/lib/filters";
-import { fmtDate, fmtInt, fmtNum } from "@/lib/format";
+import { fmtDate, fmtEuro, fmtInt, fmtNum } from "@/lib/format";
 import { haversineKm } from "@/lib/geo";
-import { kpiFor, mean, median, metricValues, sum } from "@/lib/stats";
+import { kpiFor, mean, metricValues, sum } from "@/lib/stats";
 import { useStore } from "@/lib/store";
 import type { Hotel } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -64,7 +64,6 @@ import { useToast } from "@/components/ui/toast";
 const MAP_METRICS: { value: MapMetric; label: string }[] = [
   { value: "hotels", label: "Hôtels" },
   { value: "cles", label: "Clés" },
-  { value: "revpar", label: "RevPAR" },
   { value: "caTotal", label: "CA total" },
 ];
 
@@ -114,7 +113,7 @@ export default function MapPage() {
   );
   const [scope, setScope] = React.useState<MapScope>({ level: "france" });
   const [metric, setMetric] = React.useState<MapMetric>("cles");
-  const [sortKey, setSortKey] = React.useState("revpar");
+  const [sortKey, setSortKey] = React.useState("caTotal");
   const [sortDirection, setSortDirection] = React.useState<SortDirection>("desc");
   const [selectedHotelId, setSelectedHotelId] = React.useState<string | null>(null);
   const [drawing, setDrawing] = React.useState(false);
@@ -137,16 +136,11 @@ export default function MapPage() {
   );
 
   const summary = React.useMemo(() => {
-    const values = (key: "adr" | "revpar" | "to") =>
-      metricValues(filteredHotels, state.kpis, key, filters.annee);
-    const adr = values("adr");
-    const revpar = values("revpar");
-    const to = values("to");
-    const caTotal = sum(
-      filteredHotels.map(
-        (hotel) => kpiFor(hotel.id, state.kpis, filters.annee)?.caTotal ?? 0,
-      ),
-    );
+    const caValues = filteredHotels
+      .map((hotel) => kpiFor(hotel.id, state.kpis, filters.annee)?.caTotal)
+      .filter((value): value is number => value != null);
+    const caTotal = sum(caValues);
+    const caPerKey = metricValues(filteredHotels, state.kpis, "caParCle", filters.annee);
     const keys = sum(filteredHotels.map((hotel) => hotel.cles));
     const spa = filteredHotels.filter((hotel) => hotel.equipements.spa).length;
     const restaurant = filteredHotels.filter(
@@ -154,11 +148,10 @@ export default function MapPage() {
         hotel.equipements.restaurantGastro || hotel.equipements.brasserie,
     ).length;
     return {
-      adrMean: mean(adr),
-      adrMedian: median(adr),
-      revparMean: mean(revpar),
-      toMean: mean(to),
       caTotal,
+      caMean: caValues.length ? caTotal / caValues.length : null,
+      caPerKeyMean: mean(caPerKey),
+      documented: caValues.length,
       keys,
       spaShare: filteredHotels.length ? (spa / filteredHotels.length) * 100 : null,
       restaurantShare: filteredHotels.length
@@ -633,27 +626,19 @@ export default function MapPage() {
           sub={`exercice ${filters.annee}`}
         />
         <StatTile
-          label="ADR moyen"
-          value={summary.adrMean != null ? `${fmtNum(summary.adrMean, 0)} €` : "—"}
-          sub={
-            summary.adrMedian != null
-              ? `médiane ${fmtNum(summary.adrMedian, 0)} €`
-              : "médiane —"
-          }
+          label="CA moyen"
+          value={summary.caMean != null ? fmtEuro(summary.caMean, true) : "—"}
+          sub={`${summary.documented} fiche(s) documentée(s)`}
         />
         <StatTile
-          label="RevPAR moyen"
-          value={
-            summary.revparMean != null ? `${fmtNum(summary.revparMean, 0)} €` : "—"
-          }
-          sub="par clé disponible"
+          label="CA / clé moyen"
+          value={summary.caPerKeyMean != null ? fmtEuro(summary.caPerKeyMean) : "—"}
+          sub="panel documenté"
         />
         <StatTile
-          label="TO moyen"
-          value={
-            summary.toMean != null ? `${fmtNum(summary.toMean * 100, 1)} %` : "—"
-          }
-          sub="taux d'occupation"
+          label="Fiches CA"
+          value={`${summary.documented} / ${filteredHotels.length}`}
+          sub={`exercice ${filters.annee}`}
         />
         <StatTile
           label="Spa"
@@ -835,14 +820,13 @@ export default function MapPage() {
                   {selectedKpi && <ReliabilityBadge source={selectedKpi.source} />}
                 </div>
                 <div className="mt-2.5 grid grid-cols-3 gap-2 rounded-[2px] border border-line bg-paper/60 px-2 py-1.5">
-                  <MiniKpi label="ADR" value={selectedKpi?.adr} suffix=" €" />
-                  <MiniKpi label="RevPAR" value={selectedKpi?.revpar} suffix=" €" />
+                  <MiniKpi label="CA total" value={selectedKpi?.caTotal != null ? selectedKpi.caTotal / 1_000_000 : null} suffix=" M€" digits={2} />
                   <MiniKpi
-                    label="TO"
-                    value={selectedKpi?.to != null ? selectedKpi.to * 100 : null}
-                    suffix=" %"
-                    digits={1}
+                    label="CA / clé"
+                    value={selectedKpi?.caTotal != null && selectedHotel.cles > 0 ? selectedKpi.caTotal / selectedHotel.cles : null}
+                    suffix=" €"
                   />
+                  <MiniKpi label="Clés" value={selectedHotel.cles} suffix="" digits={0} />
                 </div>
                 <div className="mt-3 flex gap-1.5">
                   <Link

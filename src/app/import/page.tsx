@@ -72,7 +72,7 @@ export default function ImportPage() {
         <StatTile label="Lots importés" value={fmtInt(state.imports.length)} sub="Historique tracé" />
         <StatTile label="Lignes traitées" value={fmtInt(stats.lines)} sub={`${fmtInt(stats.created)} créations`} />
         <StatTile label="Fusions" value={fmtInt(stats.merged)} sub="Doublons rapprochés" accent={stats.merged > 0} />
-        <StatTile label="Fiches ajoutées" value={fmtInt(stats.nonDemo)} sub="Hors base démo" accent />
+        <StatTile label="Fiches ajoutées" value={fmtInt(stats.nonDemo)} sub="Hors base compilée" accent />
       </div>
 
       <Tabs
@@ -195,7 +195,7 @@ export default function ImportPage() {
         </div>
         <div className="mt-3 flex items-start gap-2 border-t border-line pt-3 text-[10.5px] leading-relaxed text-muted">
           <Leaf className="mt-0.5 size-3.5 shrink-0 text-accent" />
-          Mode démonstration : les imports et saisies sont persistés dans le navigateur. En production, les mêmes
+          Mode local : les imports et saisies sont persistés dans le navigateur. En production, les mêmes
           règles s’appliquent sur PostgreSQL/PostGIS via les migrations fournies.
         </div>
       </Card>

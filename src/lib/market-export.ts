@@ -10,10 +10,9 @@ import {
   pipelineInZone,
   supplyByCategory,
   transactionsInZone,
-  volume,
   zoneKpis,
 } from "./market";
-import { median } from "./stats";
+import { sum } from "./stats";
 
 /**
  * Export Excel du marché : offre, performance, ouvertures, pipeline et transactions.
@@ -52,7 +51,19 @@ export function exportMarketXlsx({
   const supply = supplyByCategory(zoneHotels);
   const performance = performanceByCategory(zoneHotels, kpis, annee);
   const openings = openingsByYear(zoneHotels);
-  const medianPrice = median(visibleTransactions.map(({ transaction }) => transaction.prixParCle));
+  const documentedTransactions = visibleTransactions.filter(
+    ({ transaction }) => transaction.caAvant != null || transaction.caApres != null,
+  );
+  const caAvantTotal = sum(
+    visibleTransactions
+      .map(({ transaction }) => transaction.caAvant)
+      .filter((value): value is number => value != null),
+  );
+  const caApresTotal = sum(
+    visibleTransactions
+      .map(({ transaction }) => transaction.caApres)
+      .filter((value): value is number => value != null),
+  );
 
   const workbook = XLSX.utils.book_new();
 
@@ -68,16 +79,15 @@ export function exportMarketXlsx({
     ["Indicateur", "Valeur"],
     ["Hôtels", overview.count],
     ["Clés", overview.cles],
-    ["CA total (€)", overview.caTotal ?? ""],
-    ["ADR moyen (€)", overview.adr ?? ""],
-    ["TO moyen (%)", overview.to === null ? "" : overview.to * 100],
-    ["RevPAR moyen (€)", overview.revpar ?? ""],
-    ["EBITDA moyen (%)", overview.ebitdaPct === null ? "" : overview.ebitdaPct * 100],
-    ["Note moyenne /10", overview.note ?? ""],
+    ["CA total de l'exercice (€)", overview.caTotal ?? ""],
     [],
     ["Transactions retenues", visibleTransactions.length],
-    ["Volume cumulé (€)", volume(visibleTransactions)],
-    ["Prix par clé médian (€)", medianPrice ?? ""],
+    ["Transactions avec CA documenté", documentedTransactions.length],
+    ["CA avant cession cumulé (€)", caAvantTotal || ""],
+    ["CA après cession cumulé (€)", caApresTotal || ""],
+    [],
+    ["ADR, TO, RevPAR, EBITDA, prix/nuit", "Non documentés dans la base fournie"],
+    ["Prix de cession et prix par clé", "Non documentés dans la base fournie"],
   ];
   const summarySheet = XLSX.utils.aoa_to_sheet(summary);
   summarySheet["!cols"] = [{ wch: 34 }, { wch: 34 }];
@@ -168,13 +178,16 @@ export function exportMarketXlsx({
       "Ville",
       "Région",
       "Catégorie",
-      "Acheteur",
-      "Vendeur",
-      "Type",
-      "Prix (€)",
-      "Prix par clé (€)",
+      "Clés avant",
+      "Clés après",
       "CA avant (€)",
+      "Exercice CA avant",
       "CA après (€)",
+      "Exercice CA après",
+      "Analyste",
+      "Localisation",
+      "Source avant",
+      "Source après",
       "Source",
       "Fiabilité",
       "Date source",
@@ -189,13 +202,16 @@ export function exportMarketXlsx({
         hotel?.ville ?? "",
         hotel?.region ?? "",
         hotel ? CATEGORY_LABEL[String(hotel.categorie)] : "",
-        transaction.acheteur,
-        transaction.vendeur,
-        transaction.type,
-        transaction.prix,
-        transaction.prixParCle,
+        transaction.clesAvant ?? "",
+        transaction.clesApres ?? "",
         transaction.caAvant ?? "",
+        transaction.exerciceCaAvant ?? "",
         transaction.caApres ?? "",
+        transaction.exerciceCaApres ?? "",
+        transaction.analyste ?? "",
+        transaction.localisation ?? "",
+        transaction.sourceAvant?.source ?? "",
+        transaction.sourceApres?.source ?? "",
         transaction.source.source,
         transaction.source.fiabilite,
         fmtDate(transaction.source.dateSource),
@@ -229,22 +245,22 @@ export function exportMarketXlsx({
   const methodology: (string | number)[][] = [
     ["Méthodologie"],
     [],
-    ["Source des données", "Observatoire Nova — base de démonstration (200 hôtels fictifs)"],
+    ["Source des données", "BDD transactions hôtelières - vcompilée.xlsx — compilation de mission"],
     ["Date d'extraction", fmtDate(EXTRACTION_DATE)],
     ["Exercice analysé", annee],
     ["Zone", zone],
     ["Auteur de l'export", auteur],
     [],
     ["Calcul des agrégats", "Moyennes simples des valeurs renseignées, hors valeurs nulles."],
-    ["Prix par clé", "Prix de transaction divisé par le nombre de clés de l'hôtel."],
+    ["Prix par clé", "Non documenté dans la base fournie : aucune estimation n'est produite."],
     ["Transactions exclues", `${hiddenCount} transaction(s) confidentielle(s) non incluse(s).`],
-    ["Fermetures", "Non documentées dans la base de démonstration ; aucun chiffre n'est extrapolé."],
+    ["Fermetures", "Non documentées dans la base fournie ; aucun chiffre n'est extrapolé."],
     [],
     ["Fiabilité N1", "Donnée observable et vérifiée (rapport annuel, acte, base interne)."],
     ["Fiabilité N2", "Recherche approfondie, à confirmer."],
     ["Fiabilité N3", "Estimation, hypothèse explicitée — ne pas présenter comme vérifiée."],
     [],
-    ["Avertissement", "Toutes les données de ce classeur sont fictives et destinées à la démonstration."],
+    ["Avertissement", "Les indicateurs absents du classeur source sont laissés vides et signalés comme non documentés."],
   ];
   const methodologySheet = XLSX.utils.aoa_to_sheet(methodology);
   methodologySheet["!cols"] = [{ wch: 30 }, { wch: 100 }];

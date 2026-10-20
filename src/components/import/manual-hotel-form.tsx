@@ -129,7 +129,8 @@ export function ManualHotelForm() {
         ...emptyEquipements(),
         spa,
         restaurantGastro: gastro,
-        piscineInterieure: piscine,
+        piscine,
+            piscineInterieure: piscine,
         mice,
         couvertsInterieur: Number(couvertsInterieur) || null,
         couvertsExterieur: Number(couvertsExterieur) || null,
@@ -389,7 +390,7 @@ export function ManualHotelForm() {
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-[10.5px] text-muted">
-            La fiche sera marquée comme non-démo et tracée dans le journal d’audit.
+            La fiche sera ajoutée à la base et tracée dans le journal d’audit.
           </p>
           <Button variant="accent" onClick={() => void submit()} disabled={saving}>
             {saving ? "Création…" : "Créer la fiche hôtel"}

@@ -109,7 +109,7 @@ export function AddHotelDialog({
                         <CategoryBadge categorie={hotel.categorie} />
                         {hotel.demo && (
                           <span className="rounded-[2px] border border-dashed border-accent/50 px-1 text-[8.5px] uppercase tracking-[0.08em] text-accent">
-                            Démo
+                            Compilé
                           </span>
                         )}
                       </div>

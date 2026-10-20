@@ -24,8 +24,8 @@ import { Badge, CategoryBadge } from "@/components/ui/badge";
 import { Select } from "@/components/ui/field";
 import { useStore } from "@/lib/store";
 import { useToast } from "@/components/ui/toast";
-import { DEMO_LABEL, KPI_LABELS, YEARS } from "@/lib/constants";
-import { fmtEuro, fmtInt, fmtTo } from "@/lib/format";
+import { CURRENT_DATA_YEAR, DEMO_LABEL, KPI_LABELS, YEARS } from "@/lib/constants";
+import { fmtEuro, fmtInt } from "@/lib/format";
 import { mean, sum } from "@/lib/stats";
 import {
   buildComparisonColumns,
@@ -130,7 +130,7 @@ function ExportMenu({
 export default function ComparateurPage() {
   const { state, currentUser, setBasket, setReference, toggleBasket, addAudit } = useStore();
   const { toast } = useToast();
-  const [annee, setAnnee] = React.useState(2025);
+  const [annee, setAnnee] = React.useState(CURRENT_DATA_YEAR);
   const [tab, setTab] = React.useState("synthese");
   const [manualReference, setManualReference] = React.useState<ManualReference | null>(null);
   const [manualOpen, setManualOpen] = React.useState(false);
@@ -165,9 +165,8 @@ export default function ComparateurPage() {
       .map((column) => column.values.caTotal)
       .filter((value): value is number => value != null),
   );
-  const adrAverage = mean(comparisonValues(columns, "adr"));
-  const revparAverage = mean(comparisonValues(columns, "revpar"));
-  const toAverage = mean(comparisonValues(columns, "to"));
+  const caParCleAverage = mean(comparisonValues(columns, "caParCle"));
+  const documentedCa = columns.filter((column) => column.values.caTotal != null).length;
   const ready = columns.length >= 2;
 
   const chooseReference = (id: string) => {
@@ -328,9 +327,9 @@ export default function ComparateurPage() {
           <StatTile label="Acteurs comparés" value={columns.length} sub={`${panelHotels.length} hôtels + référence`} accent />
           <StatTile label="Clés du panel" value={fmtInt(totalKeys)} sub={`${fmtInt(mean(columns.map((column) => column.cles)) ?? 0)} clés en moyenne`} />
           <StatTile label="CA cumulé" value={fmtEuro(totalCa, true)} sub={`exercice ${annee}`} />
-          <StatTile label="ADR moyen" value={adrAverage != null ? fmtEuro(adrAverage) : "—"} sub="panel complet" />
-          <StatTile label="RevPAR moyen" value={revparAverage != null ? fmtEuro(revparAverage) : "—"} sub="panel complet" />
-          <StatTile label="TO moyen" value={toAverage != null ? fmtTo(toAverage) : "—"} sub="panel complet" />
+          <StatTile label="CA moyen" value={totalCa && columns.length ? fmtEuro(totalCa / columns.length, true) : "—"} sub={`${documentedCa} fiche(s) documentée(s)`} />
+          <StatTile label="CA / clé moyen" value={caParCleAverage != null ? fmtEuro(caParCleAverage) : "—"} sub="panel documenté" />
+          <StatTile label="Fiches documentées" value={`${documentedCa} / ${columns.length}`} sub="CA renseigné" />
           <StatTile label="Référence" value={reference?.nom ?? "—"} sub={reference ? `${reference.ville} · ${fmtInt(reference.cles)} clés` : undefined} />
         </Card>
       )}
@@ -399,16 +398,13 @@ export default function ComparateurPage() {
                           : `Hôtel de l'observatoire, ${reference.groupe}, ${reference.ville}.`}
                       </p>
                       <dl className="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-line pt-2.5 text-[11px]">
-                        {(["caTotal", "caParCle", "adr", "revpar", "to", "ebitdaPct", "note"] as const).map((key) => (
+                        {(["caTotal", "caParCle", "cles", "surfaceTotale"] as const).map((key) => (
                           <div key={key}>
                             <dt className="text-[9px] uppercase tracking-[0.06em] text-faint">{KPI_LABELS[key].short}</dt>
                             <dd className="tabular text-ink">
-                              {key === "to" || key === "ebitdaPct"
-                                ? reference.values[key] != null ? fmtTo(reference.values[key]!) : "—"
-                                : null}
                               {key === "caTotal" ? fmtEuro(reference.values[key] ?? null, true) : null}
-                              {key === "caParCle" || key === "adr" || key === "revpar" ? fmtEuro(reference.values[key] ?? null) : null}
-                              {key === "note" ? (reference.values[key]?.toLocaleString("fr-FR", { maximumFractionDigits: 1 }) ?? "—") : null}
+                              {key === "caParCle" || key === "surfaceTotale" ? fmtEuro(reference.values[key] ?? null) : null}
+                              {key === "cles" ? fmtInt(reference.values[key] ?? null) : null}
                             </dd>
                           </div>
                         ))}

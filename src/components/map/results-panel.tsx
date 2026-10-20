@@ -35,6 +35,7 @@ export type ResultColumn =
   | "to"
   | "revpar"
   | "caTotal"
+  | "caParCle"
   | "note";
 
 const COLUMN_DEFS: {
@@ -44,17 +45,18 @@ const COLUMN_DEFS: {
   align?: "left" | "right";
   sortKey: string;
 }[] = [
-  { id: "categorie", label: "Cat.", width: 42, sortKey: "categorie" },
-  { id: "ville", label: "Ville", width: 82, sortKey: "ville" },
-  { id: "cles", label: "Clés", width: 42, align: "right", sortKey: "cles" },
-  { id: "adr", label: "ADR", width: 56, align: "right", sortKey: "adr" },
-  { id: "to", label: "TO", width: 44, align: "right", sortKey: "to" },
-  { id: "revpar", label: "RevPAR", width: 60, align: "right", sortKey: "revpar" },
-  { id: "caTotal", label: "CA", width: 58, align: "right", sortKey: "caTotal" },
+  { id: "categorie", label: "Cat.", width: 36, sortKey: "categorie" },
+  { id: "ville", label: "Ville", width: 70, sortKey: "ville" },
+  { id: "cles", label: "Clés", width: 38, align: "right", sortKey: "cles" },
+  { id: "adr", label: "ADR", width: 50, align: "right", sortKey: "adr" },
+  { id: "to", label: "TO", width: 40, align: "right", sortKey: "to" },
+  { id: "revpar", label: "RevPAR", width: 54, align: "right", sortKey: "revpar" },
+  { id: "caTotal", label: "CA", width: 52, align: "right", sortKey: "caTotal" },
+  { id: "caParCle", label: "CA/clé", width: 56, align: "right", sortKey: "caParCle" },
   { id: "note", label: "Note", width: 40, align: "right", sortKey: "note" },
 ];
 
-const DEFAULT_COLUMNS: ResultColumn[] = ["categorie", "cles", "adr", "revpar"];
+const DEFAULT_COLUMNS: ResultColumn[] = ["categorie", "caTotal", "caParCle"];
 
 export interface ResultsPanelProps {
   hotels: Hotel[];
@@ -393,6 +395,12 @@ function renderCell(
       );
     case "caTotal":
       return <span>{fmtEuro(kpi?.caTotal, true)}</span>;
+    case "caParCle":
+      return (
+        <span>
+          {kpi?.caTotal != null && hotel.cles > 0 ? fmtEuro(kpi.caTotal / hotel.cles) : "—"}
+        </span>
+      );
     case "note":
       return <span>{kpi?.note != null ? fmtNum(kpi.note, 1) : "—"}</span>;
     default:

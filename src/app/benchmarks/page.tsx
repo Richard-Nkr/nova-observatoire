@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, EmptyState, PageHeader, StatTile } from "@/components/ui/misc";
 import { BenchmarkDialog } from "@/components/benchmark/benchmark-dialog";
 import { benchmarkHotels, benchmarkOverview } from "@/lib/benchmark";
-import { fmtDate, fmtEuro, fmtInt, fmtNum } from "@/lib/format";
+import { fmtDate, fmtEuro, fmtInt } from "@/lib/format";
 import { DEMO_LABEL } from "@/lib/constants";
 
 export default function BenchmarksPage() {
@@ -102,8 +102,8 @@ export default function BenchmarksPage() {
                       </div>
                     </div>
                     <div className="hidden shrink-0 text-right sm:block">
-                      <p className="text-[8.5px] font-semibold uppercase tracking-[0.1em] text-faint">RevPAR moyen</p>
-                      <p className="mt-1 tabular font-serif text-[19px] text-ink">{overview.revpar != null ? fmtEuro(overview.revpar) : "—"}</p>
+                      <p className="text-[8.5px] font-semibold uppercase tracking-[0.1em] text-faint">CA cumulé</p>
+                      <p className="mt-1 tabular font-serif text-[19px] text-ink">{overview.caTotal != null ? fmtEuro(overview.caTotal, true) : "—"}</p>
                       <p className="mt-0.5 text-[9.5px] text-faint">{overview.cles > 0 ? `${fmtInt(overview.cles)} clés` : "clés non renseignées"}</p>
                       <span className="mt-2 inline-flex items-center gap-1 text-[10px] font-medium text-accent opacity-0 transition-opacity group-hover:opacity-100">
                         Ouvrir <ArrowUpRight className="size-3" />
@@ -112,8 +112,8 @@ export default function BenchmarksPage() {
                   </div>
                   <div className="flex items-center gap-5 border-t border-line bg-paper/35 px-4 py-2 text-[10px] text-faint">
                     <span>CA cumulé <strong className="ml-1 tabular font-medium text-ink-soft">{overview.caTotal != null ? fmtEuro(overview.caTotal, true) : "—"}</strong></span>
-                    <span>ADR moyen <strong className="ml-1 tabular font-medium text-ink-soft">{overview.adr != null ? fmtEuro(overview.adr) : "—"}</strong></span>
-                    <span>TO moyen <strong className="ml-1 tabular font-medium text-ink-soft">{overview.to != null ? `${fmtNum(overview.to * 100, 1)} %` : "—"}</strong></span>
+                    <span>CA cumulé <strong className="ml-1 tabular font-medium text-ink-soft">{overview.caTotal != null ? fmtEuro(overview.caTotal, true) : "—"}</strong></span>
+                    <span>CA / clé <strong className="ml-1 tabular font-medium text-ink-soft">{overview.caTotal != null && overview.cles ? fmtEuro(overview.caTotal / overview.cles) : "—"}</strong></span>
                     <span className="ml-auto hidden sm:inline">Mis à jour le {fmtDate(benchmark.updatedAt)}</span>
                   </div>
                 </Link>
@@ -148,7 +148,7 @@ export default function BenchmarksPage() {
               Chaque benchmark fige un exercice, un panel et une version. Les valeurs manquantes restent vides ; les estimations N3 sont signalées comme hypothèses.
             </p>
           </Card>
-          <p className="px-1 text-[9.5px] leading-relaxed text-faint">{DEMO_LABEL} · 200 hôtels fictifs · aucune donnée réelle.</p>
+          <p className="px-1 text-[9.5px] leading-relaxed text-faint">{DEMO_LABEL} · source BDD transactions hôtelières compilée.</p>
         </aside>
       </div>
 

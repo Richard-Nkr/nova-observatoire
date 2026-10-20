@@ -36,7 +36,7 @@ import {
 import { exportBenchmarkPptx } from "@/lib/exports";
 import { kpiFor } from "@/lib/stats";
 import { CATEGORY_LABEL, DEMO_LABEL } from "@/lib/constants";
-import { fmtDate, fmtDateTime, fmtEuro, fmtInt, fmtNum, fmtTo } from "@/lib/format";
+import { fmtDate, fmtDateTime, fmtEuro, fmtInt } from "@/lib/format";
 import { ReliabilityBadge } from "@/components/reliability";
 
 export default function BenchmarkDetailPage() {
@@ -80,19 +80,22 @@ export default function BenchmarkDetailPage() {
     () => (benchmark ? benchmarkSourceRows(benchmark, state.hotels, state.kpis) : []),
     [benchmark, state.hotels, state.kpis],
   );
+  const documentedCa = ordered.filter(
+    (hotel) => kpiFor(hotel.id, state.kpis, benchmark?.annee ?? 2024)?.caTotal != null,
+  ).length;
+
   const positioningRows = React.useMemo<PositioningRow[]>(() => {
     if (!benchmark) return [];
     return ordered
       .map((hotel, index) => {
         const kpi = kpiFor(hotel.id, state.kpis, benchmark.annee);
-        if (!kpi || kpi.adr == null || kpi.note == null) return null;
+        if (!kpi || kpi.caTotal == null) return null;
         const secteur = sectors.find((sector) => sector.hotelIds.includes(hotel.id))?.nom ?? "Panel";
         return {
           hotel,
           index: index + 1,
-          adr: kpi.adr,
-          note: kpi.note,
-          revpar: kpi.revpar,
+          caTotal: kpi.caTotal,
+          caParCle: hotel.cles > 0 ? kpi.caTotal / hotel.cles : null,
           keys: hotel.cles,
           secteur,
         } satisfies PositioningRow;
@@ -206,7 +209,7 @@ export default function BenchmarkDetailPage() {
         <span className="ml-auto flex items-center gap-1.5">
           <Badge tone="navy">v{benchmark.version}</Badge>
           <Badge tone="outline">Exercice {benchmark.annee}</Badge>
-          <Badge tone="accent">Données démo</Badge>
+          <Badge tone="accent">Base compilée</Badge>
         </span>
         <span className="text-[9.5px] text-faint">Mis à jour le {fmtDateTime(benchmark.updatedAt)}</span>
       </div>
@@ -215,9 +218,9 @@ export default function BenchmarkDetailPage() {
         <StatTile label="Acteurs" value={fmtInt(overview.count)} sub={`${sectors.length} secteurs`} />
         <StatTile label="Clés" value={fmtInt(overview.cles)} sub="panel cumulé" />
         <StatTile label="CA cumulé" value={overview.caTotal != null ? fmtEuro(overview.caTotal, true) : "—"} sub="valeur déclarée" />
-        <StatTile label="ADR moyen" value={overview.adr != null ? fmtEuro(overview.adr) : "—"} sub="non pondéré" />
-        <StatTile label="RevPAR moyen" value={overview.revpar != null ? fmtEuro(overview.revpar) : "—"} sub="non pondéré" />
-        <StatTile label="Note moyenne" value={overview.note != null ? `${fmtNum(overview.note, 1)}/10` : "—"} sub={overview.ebitdaPct != null ? `EBITDA ${fmtTo(overview.ebitdaPct)}` : "EBITDA non renseigné"} />
+        <StatTile label="CA / clé" value={overview.caTotal != null && overview.cles ? fmtEuro(overview.caTotal / overview.cles) : "—"} sub="panel documenté" />
+        <StatTile label="Fiches CA" value={fmtInt(documentedCa)} sub={`sur ${overview.count} acteurs`} />
+        <StatTile label="Secteurs" value={fmtInt(sectors.length)} sub="mailles d’analyse" />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.35fr_0.65fr]">
@@ -284,11 +287,8 @@ export default function BenchmarkDetailPage() {
               <Th align="right">Hôtels</Th>
               <Th align="right">Clés</Th>
               <Th align="right">CA cumulé</Th>
-              <Th align="right">ADR moyen</Th>
-              <Th align="right">TO moyen</Th>
-              <Th align="right">RevPAR moyen</Th>
-              <Th align="right">Note</Th>
-              <Th>Leader RevPAR</Th>
+              <Th align="right">CA / clé</Th>
+              <Th>Leader CA</Th>
             </tr>
           </thead>
           <tbody>
@@ -303,14 +303,11 @@ export default function BenchmarkDetailPage() {
                 <Td align="right">{stat.count}</Td>
                 <Td align="right">{fmtInt(stat.cles)}</Td>
                 <Td align="right">{stat.caTotal != null ? fmtEuro(stat.caTotal, true) : "—"}</Td>
-                <Td align="right">{stat.adr != null ? fmtEuro(stat.adr) : "—"}</Td>
-                <Td align="right">{stat.to != null ? fmtTo(stat.to) : "—"}</Td>
-                <Td align="right" className="font-medium text-ink">{stat.revpar != null ? fmtEuro(stat.revpar) : "—"}</Td>
-                <Td align="right">{stat.note != null ? `${fmtNum(stat.note, 1)}/10` : "—"}</Td>
+                <Td align="right">{stat.caTotal != null && stat.cles ? fmtEuro(stat.caTotal / stat.cles) : "—"}</Td>
                 <Td>
                   {stat.lead ? (
                     <span className="text-[10.5px] text-ink-soft">
-                      {stat.lead.hotel.nom} <span className="tabular text-faint">· {fmtEuro(stat.lead.revpar)}</span>
+                      {stat.lead.hotel.nom} <span className="tabular text-faint">· {fmtEuro(stat.lead.caTotal, true)}</span>
                     </span>
                   ) : (
                     <span className="text-faint">—</span>
@@ -323,10 +320,7 @@ export default function BenchmarkDetailPage() {
               <Td align="right" className="font-medium text-ink">{overview.count}</Td>
               <Td align="right" className="font-medium text-ink">{fmtInt(overview.cles)}</Td>
               <Td align="right" className="font-medium text-ink">{overview.caTotal != null ? fmtEuro(overview.caTotal, true) : "—"}</Td>
-              <Td align="right" className="font-medium text-ink">{overview.adr != null ? fmtEuro(overview.adr) : "—"}</Td>
-              <Td align="right" className="font-medium text-ink">{overview.to != null ? fmtTo(overview.to) : "—"}</Td>
-              <Td align="right" className="font-medium text-ink">{overview.revpar != null ? fmtEuro(overview.revpar) : "—"}</Td>
-              <Td align="right" className="font-medium text-ink">{overview.note != null ? `${fmtNum(overview.note, 1)}/10` : "—"}</Td>
+              <Td align="right" className="font-medium text-ink">{overview.caTotal != null && overview.cles ? fmtEuro(overview.caTotal / overview.cles) : "—"}</Td>
               <Td />
             </tr>
           </tbody>
@@ -335,13 +329,11 @@ export default function BenchmarkDetailPage() {
 
       <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
         <Card className="p-4">
-          <SectionTitle hint={`${positioningRows.length} acteurs avec ADR et note renseignés`}>Positionnement prix × qualité</SectionTitle>
+          <SectionTitle hint={`${positioningRows.length} acteurs avec CA documenté`}>CA × productivité</SectionTitle>
           <div ref={chartRef}>
             <PositioningChart
               rows={positioningRows}
               sectors={sectors.map((sector) => sector.nom)}
-              meanAdr={overview.adr}
-              meanNote={overview.note}
             />
           </div>
         </Card>
@@ -359,9 +351,8 @@ export default function BenchmarkDetailPage() {
                 <Th>Ville</Th>
                 <Th>Cat.</Th>
                 <Th align="right">Clés</Th>
-                <Th align="right">ADR</Th>
-                <Th align="right">RevPAR</Th>
-                <Th align="right">Note</Th>
+                <Th align="right">CA total</Th>
+                <Th align="right">CA / clé</Th>
               </tr>
             </thead>
             <tbody>
@@ -381,9 +372,8 @@ export default function BenchmarkDetailPage() {
                     <Td>{hotel.ville}</Td>
                     <Td><Badge tone="outline">{CATEGORY_LABEL[hotel.categorie]}</Badge></Td>
                     <Td align="right">{fmtInt(hotel.cles)}</Td>
-                    <Td align="right">{kpi?.adr != null ? fmtEuro(kpi.adr) : "—"}</Td>
-                    <Td align="right" className="font-medium text-ink">{kpi?.revpar != null ? fmtEuro(kpi.revpar) : "—"}</Td>
-                    <Td align="right">{kpi?.note != null ? fmtNum(kpi.note, 1) : "—"}</Td>
+                    <Td align="right">{kpi?.caTotal != null ? fmtEuro(kpi.caTotal, true) : "—"}</Td>
+                    <Td align="right" className="font-medium text-ink">{kpi?.caTotal != null && hotel.cles ? fmtEuro(kpi.caTotal / hotel.cles) : "—"}</Td>
                   </tr>
                 );
               })}
@@ -418,9 +408,9 @@ export default function BenchmarkDetailPage() {
                   <p className="text-[9.5px] text-faint">{source.ville} · {source.categorie}</p>
                 </Td>
                 <Td className="max-w-[220px] whitespace-normal text-[10.5px]">{source.fiche}</Td>
-                <Td><ReliabilityBadge source={{ source: source.fiche, fiabilite: source.ficheFiabilite as "N1" | "N2" | "N3", dateSource: source.ficheDate, auteur: source.ficheAuteur }} /></Td>
+                <Td>{["N1", "N2", "N3"].includes(source.ficheFiabilite) ? <ReliabilityBadge source={{ source: source.fiche, fiabilite: source.ficheFiabilite as "N1" | "N2" | "N3", dateSource: source.ficheDate, auteur: source.ficheAuteur }} /> : <span className="text-faint">—</span>}</Td>
                 <Td className="max-w-[220px] whitespace-normal text-[10.5px]">{source.kpi}</Td>
-                <Td><ReliabilityBadge source={{ source: source.kpi, fiabilite: source.kpiFiabilite as "N1" | "N2" | "N3", dateSource: source.kpiDate, auteur: source.kpiAuteur }} /></Td>
+                <Td>{["N1", "N2", "N3"].includes(source.kpiFiabilite) ? <ReliabilityBadge source={{ source: source.kpi, fiabilite: source.kpiFiabilite as "N1" | "N2" | "N3", dateSource: source.kpiDate, auteur: source.kpiAuteur }} /> : <span className="text-faint">—</span>}</Td>
                 <Td>{fmtDate(source.kpiDate)}</Td>
                 <Td>{source.kpiAuteur}</Td>
                 <Td className="max-w-[260px] whitespace-normal text-[10px] italic text-muted">{source.hypothese || "—"}</Td>
@@ -431,7 +421,7 @@ export default function BenchmarkDetailPage() {
       </Card>
 
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3 text-[9.5px] text-faint">
-        <span>{DEMO_LABEL} · benchmark fictif à usage de démonstration · {ordered.length} acteurs · exercice {benchmark.annee}</span>
+        <span>{DEMO_LABEL} · benchmark de mission · {ordered.length} acteurs · exercice {benchmark.annee}</span>
         <span>Méthode : panel du {fmtDate(benchmark.date)} · sources et fiabilité conservées dans chaque fiche.</span>
       </div>
 

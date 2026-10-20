@@ -47,7 +47,7 @@ export interface BenchmarkSectorStats {
   revpar: number | null;
   ebitdaPct: number | null;
   note: number | null;
-  lead: { hotel: Hotel; revpar: number } | null;
+  lead: { hotel: Hotel; caTotal: number } | null;
 }
 
 /** Agrégats par secteur : les valeurs absentes ne sont jamais remplacées par zéro. */
@@ -68,8 +68,8 @@ export function benchmarkSectorStats(
 
   let lead: BenchmarkSectorStats["lead"] = null;
   for (const hotel of sectorHotels) {
-    const revpar = metricValue(hotel, kpis, "revpar", annee);
-    if (revpar != null && (!lead || revpar > lead.revpar)) lead = { hotel, revpar };
+    const caTotal = metricValue(hotel, kpis, "caTotal", annee);
+    if (caTotal != null && (!lead || caTotal > lead.caTotal)) lead = { hotel, caTotal };
   }
 
   return {

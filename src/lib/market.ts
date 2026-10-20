@@ -57,7 +57,15 @@ export interface PriceKeyPoint {
   median: number | null;
   mean: number | null;
   count: number;
-  volume: number;
+  volume: number | null;
+}
+
+export interface DealCaPoint {
+  label: string;
+  caAvant: number | null;
+  caApres: number | null;
+  count: number;
+  documented: number;
 }
 
 export function hotelInZone(hotel: Hotel, zone: string): boolean {
@@ -194,12 +202,18 @@ export function priceKeyByYear(rows: EnrichedTransaction[]): PriceKeyPoint[] {
   const points: PriceKeyPoint[] = [];
   for (let annee = min; annee <= max; annee += 1) {
     const subset = rows.filter(({ transaction }) => transaction.date.startsWith(String(annee)));
+    const prices = subset
+      .map(({ transaction }) => transaction.prix)
+      .filter((value): value is number => value !== null);
+    const pricesPerKey = subset
+      .map(({ transaction }) => transaction.prixParCle)
+      .filter((value): value is number => value !== null);
     points.push({
       label: String(annee),
-      median: median(subset.map(({ transaction }) => transaction.prixParCle)),
-      mean: mean(subset.map(({ transaction }) => transaction.prixParCle)),
+      median: median(pricesPerKey),
+      mean: mean(pricesPerKey),
       count: subset.length,
-      volume: sum(subset.map(({ transaction }) => transaction.prix)),
+      volume: prices.length ? sum(prices) : null,
     });
   }
   return points;
@@ -212,16 +226,85 @@ export function priceKeyByRegion(rows: EnrichedTransaction[]): PriceKeyPoint[] {
     groups.set(region, [...(groups.get(region) ?? []), row]);
   }
   return [...groups.entries()]
-    .map(([label, subset]) => ({
-      label,
-      median: median(subset.map(({ transaction }) => transaction.prixParCle)),
-      mean: mean(subset.map(({ transaction }) => transaction.prixParCle)),
-      count: subset.length,
-      volume: sum(subset.map(({ transaction }) => transaction.prix)),
-    }))
+    .map(([label, subset]) => {
+      const prices = subset
+        .map(({ transaction }) => transaction.prix)
+        .filter((value): value is number => value !== null);
+      const pricesPerKey = subset
+        .map(({ transaction }) => transaction.prixParCle)
+        .filter((value): value is number => value !== null);
+      return {
+        label,
+        median: median(pricesPerKey),
+        mean: mean(pricesPerKey),
+        count: subset.length,
+        volume: prices.length ? sum(prices) : null,
+      };
+    })
     .sort((a, b) => (b.median ?? 0) - (a.median ?? 0));
 }
 
 export function volume(rows: EnrichedTransaction[]): number {
-  return sum(rows.map(({ transaction }) => transaction.prix));
+  return sum(
+    rows
+      .map(({ transaction }) => transaction.prix)
+      .filter((value): value is number => value !== null),
+  );
+}
+
+/** CA avant / après par année de deal, sans imputer les exercices manquants. */
+export function caDealsByYear(rows: EnrichedTransaction[]): DealCaPoint[] {
+  const groups = new Map<string, EnrichedTransaction[]>();
+  for (const row of rows) {
+    const year = row.transaction.date.slice(0, 4);
+    if (!year) continue;
+    groups.set(year, [...(groups.get(year) ?? []), row]);
+  }
+  return [...groups.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([label, subset]) => {
+      const before = subset
+        .map(({ transaction }) => transaction.caAvant)
+        .filter((value): value is number => value !== null);
+      const after = subset
+        .map(({ transaction }) => transaction.caApres)
+        .filter((value): value is number => value !== null);
+      return {
+        label,
+        caAvant: before.length ? sum(before) : null,
+        caApres: after.length ? sum(after) : null,
+        count: subset.length,
+        documented: subset.filter(
+          ({ transaction }) => transaction.caAvant !== null || transaction.caApres !== null,
+        ).length,
+      };
+    });
+}
+
+/** CA avant / après par région, sur les transactions documentées. */
+export function caDealsByRegion(rows: EnrichedTransaction[]): DealCaPoint[] {
+  const groups = new Map<string, EnrichedTransaction[]>();
+  for (const row of rows) {
+    const region = row.hotel?.region ?? "Zone non renseignée";
+    groups.set(region, [...(groups.get(region) ?? []), row]);
+  }
+  return [...groups.entries()]
+    .map(([label, subset]) => {
+      const before = subset
+        .map(({ transaction }) => transaction.caAvant)
+        .filter((value): value is number => value !== null);
+      const after = subset
+        .map(({ transaction }) => transaction.caApres)
+        .filter((value): value is number => value !== null);
+      return {
+        label,
+        caAvant: before.length ? sum(before) : null,
+        caApres: after.length ? sum(after) : null,
+        count: subset.length,
+        documented: subset.filter(
+          ({ transaction }) => transaction.caAvant !== null || transaction.caApres !== null,
+        ).length,
+      };
+    })
+    .sort((a, b) => (b.caApres ?? b.caAvant ?? 0) - (a.caApres ?? a.caAvant ?? 0));
 }

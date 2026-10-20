@@ -57,7 +57,7 @@ export function UserDialog({
       <DialogContent className="max-w-md">
         <DialogHeader
           title="Inviter un utilisateur"
-          description="Le compte est actif immédiatement dans cet environnement de démonstration."
+          description="Le compte est actif immédiatement dans cet environnement."
         />
         <DialogBody className="space-y-4">
           <Field label="Nom complet">

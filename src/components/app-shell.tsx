@@ -8,6 +8,7 @@ import {
   BarChart3,
   Building2,
   Check,
+  Database,
   DatabaseZap,
   GitCompareArrows,
   LayoutGrid,
@@ -42,6 +43,7 @@ const navGroups = [
   {
     label: "Données",
     items: [
+      { href: "/base", label: "Base de données", icon: Database },
       { href: "/import", label: "Import & enrichissement", icon: DatabaseZap },
       { href: "/qualite", label: "Qualité des données", icon: ShieldCheck },
       { href: "/admin", label: "Administration", icon: Settings2 },
@@ -122,12 +124,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="mb-2.5 rounded-[2px] border border-white/[0.09] bg-white/[0.035] px-2 py-1.5">
         <div className="flex items-center justify-between">
           <span className="text-[8.5px] font-semibold uppercase tracking-[0.12em] text-[#d3a07e]">
-            Environnement démo
+            Base compilée
           </span>
           <span className="size-1.5 rounded-full bg-[#c9916b]" />
         </div>
         <p className="mt-0.5 text-[10px] leading-tight text-white/45">
-          {fmtInt(state.hotels.length)} hôtels fictifs · {state.hotels.length ? new Set(state.hotels.map((h) => h.region)).size : 0} régions
+          {fmtInt(state.hotels.length)} hôtels · {state.hotels.length ? new Set(state.hotels.map((h) => h.region)).size : 0} régions
         </p>
       </div>
 
@@ -159,7 +161,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             className="z-[90] w-60 rounded-[3px] border border-line-strong bg-surface p-1 shadow-[0_12px_40px_rgba(15,36,51,0.22)]"
           >
             <DropdownMenu.Label className="px-2 py-1.5 text-[9px] font-semibold uppercase tracking-[0.1em] text-muted">
-              Changer d’utilisateur (démo)
+              Changer d’utilisateur
             </DropdownMenu.Label>
             {state.users
               .filter((user) => user.actif)
@@ -185,7 +187,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               className="flex cursor-pointer items-center gap-2 rounded-[2px] px-2 py-1.5 text-[11px] text-muted outline-none hover:bg-black/[0.045]"
             >
               <LogOut className="size-3.5" />
-              Réinitialiser les données démo
+              Réinitialiser la base
             </DropdownMenu.Item>
           </DropdownMenu.Content>
         </DropdownMenu.Portal>

@@ -33,8 +33,7 @@ import { fmtEuro, fmtInt } from "@/lib/format";
 type ScatterDatum = {
   id: string;
   nom: string;
-  adr: number;
-  to: number;
+  caTotal: number;
   cles: number;
   categorie: string;
   isReference: boolean;
@@ -53,7 +52,7 @@ function ScatterTip({
     <div className="rounded-[3px] border border-line-strong bg-surface px-3 py-2 text-[11px] shadow-[0_8px_28px_rgba(15,36,51,0.16)]">
       <p className="font-medium text-ink">{datum.nom}</p>
       <p className="mt-0.5 text-[10px] text-muted">
-        ADR {fmtEuro(datum.adr)} · TO {datum.to.toLocaleString("fr-FR", { maximumFractionDigits: 1 })} %
+        CA {fmtEuro(datum.caTotal, true)} · {fmtEuro(datum.caTotal / Math.max(1, datum.cles))} / clé
       </p>
       <p className="mt-0.5 text-[10px] text-muted">
         {fmtInt(datum.cles)} clés · {datum.categorie}
@@ -63,62 +62,60 @@ function ScatterTip({
   );
 }
 
-/** Prix × occupation, taille = nombre de clés. */
+/** CA × capacité, taille = nombre de clés. */
 export function PriceOccupancyScatter({ columns }: { columns: ComparisonColumn[] }) {
   const data: ScatterDatum[] = columns
-    .filter((column) => column.values.adr != null && column.values.to != null)
+    .filter((column) => column.values.caTotal != null && column.cles > 0)
     .map((column) => ({
       id: column.id,
       nom: column.nom,
-      adr: column.values.adr as number,
-      to: (column.values.to as number) * 100,
+      caTotal: column.values.caTotal as number,
       cles: column.cles,
       categorie: column.categorie === "Palace" ? "Palace" : `${column.categorie}★`,
       isReference: column.isReference,
     }));
   const reference = data.find((datum) => datum.isReference);
-  const adrs = data.map((datum) => datum.adr);
+  const keyCounts = data.map((datum) => datum.cles);
   const domain: [number, number] = [
-    Math.floor(Math.min(...adrs, reference?.adr ?? 0) * 0.85),
-    Math.ceil(Math.max(...adrs, reference?.adr ?? 0) * 1.08),
+    Math.floor(Math.min(...keyCounts, reference?.cles ?? 0) * 0.85),
+    Math.ceil(Math.max(...keyCounts, reference?.cles ?? 0) * 1.08),
   ];
   return (
     <Card>
       <SectionTitle hint="Taille de bulle = nombre de clés. Ligne cuivrée = actif de référence.">
-        Prix × occupation
+        CA × capacité
       </SectionTitle>
       <ChartFrame height={290} empty={data.length < 2}>
         <ResponsiveContainer width="100%" height="100%">
           <ScatterChart margin={{ top: 8, right: 16, bottom: 22, left: 0 }}>
             <CartesianGrid stroke={CHART_COLORS.line} strokeDasharray="2 3" />
             <XAxis
-              dataKey="adr"
+              dataKey="cles"
               type="number"
-              name="ADR"
+              name="Clés"
               domain={domain}
               tick={{ fontSize: 9, fill: "#6b747b" }}
               axisLine={{ stroke: "#d3ccbf" }}
               tickLine={false}
-              tickFormatter={(value: number) => `${Math.round(value)} €`}
-              label={{ value: "ADR (€ HT)", position: "insideBottom", offset: -10, fontSize: 9, fill: "#949b9f" }}
+              tickFormatter={(value: number) => fmtInt(value)}
+              label={{ value: "Nombre de clés", position: "insideBottom", offset: -10, fontSize: 9, fill: "#949b9f" }}
             />
             <YAxis
-              dataKey="to"
+              dataKey="caTotal"
               type="number"
-              name="TO"
-              domain={[0, 100]}
+              name="CA"
               tick={{ fontSize: 9, fill: "#6b747b" }}
               axisLine={{ stroke: "#d3ccbf" }}
               tickLine={false}
-              tickFormatter={(value: number) => `${value} %`}
-              width={40}
+              tickFormatter={(value: number) => fmtEuro(value, true)}
+              width={58}
             />
             <ZAxis dataKey="cles" range={[70, 420]} />
             <Tooltip content={<ScatterTip />} />
             {reference && (
               <>
-                <ReferenceLine x={reference.adr} stroke={CHART_COLORS.copper} strokeDasharray="3 3" />
-                <ReferenceLine y={reference.to} stroke={CHART_COLORS.copper} strokeDasharray="3 3" />
+                <ReferenceLine x={reference.cles} stroke={CHART_COLORS.copper} strokeDasharray="3 3" />
+                <ReferenceLine y={reference.caTotal} stroke={CHART_COLORS.copper} strokeDasharray="3 3" />
               </>
             )}
             <Scatter data={data} name="Hôtels">
@@ -139,11 +136,11 @@ export function PriceOccupancyScatter({ columns }: { columns: ComparisonColumn[]
   );
 }
 
-const RANKED_METRICS: KpiKey[] = ["revpar", "adr", "to", "caParCle", "ebitdaPct", "note"];
+const RANKED_METRICS: KpiKey[] = ["caTotal", "caParCle", "cles", "surfaceTotale"];
 
 /** Classement du panel sur l'indicateur choisi. */
 export function RankedBars({ columns }: { columns: ComparisonColumn[] }) {
-  const [metric, setMetric] = React.useState<KpiKey>("revpar");
+  const [metric, setMetric] = React.useState<KpiKey>("caParCle");
   const data = columns
     .filter((column) => column.values[metric] != null)
     .sort((a, b) => (b.values[metric] as number) - (a.values[metric] as number))
@@ -211,7 +208,7 @@ export function RankedBars({ columns }: { columns: ComparisonColumn[] }) {
   );
 }
 
-const RADAR_KEYS: KpiKey[] = ["adr", "to", "revpar", "caParCle", "ebitdaPct", "note", "m2ParCle"];
+const RADAR_KEYS: KpiKey[] = ["caTotal", "caParCle", "cles", "surfaceTotale"];
 const RADAR_COLORS = ["#a8653f", "#174965", "#3e728d", "#7f98a6", "#256b4e", "#9a5d10"];
 
 /** Radar normalisé 0–100 : 100 = meilleure valeur du panel sur l'axe. */
@@ -269,9 +266,9 @@ export function NormalizedRadar({ columns }: { columns: ComparisonColumn[] }) {
   );
 }
 
-/** Mini courbe de repère de la référence sur le panel (CA, RevPAR). */
+/** Mini courbe de repère de la référence sur le panel. */
 export function ReferenceGapLine({ columns }: { columns: ComparisonColumn[] }) {
-  const [metric, setMetric] = React.useState<KpiKey>("revpar");
+  const [metric, setMetric] = React.useState<KpiKey>("caParCle");
   const reference = columns.find((column) => column.isReference);
   const values = columns
     .filter((column) => !column.isReference && column.values[metric] != null)

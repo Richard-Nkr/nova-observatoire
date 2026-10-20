@@ -286,8 +286,8 @@ export default function QualitePage() {
       ["Les surfaces de spa, places de parking et couverts ne sont exigés que si l'équipement existe."],
       ["Les indicateurs sont appréciés sur l'exercice sélectionné, pas sur la dernière valeur connue."],
       [],
-      ["Environnement de démonstration"],
-      ["Les hôtels sont fictifs et signalés comme données DÉMO. Aucune valeur n'est extrapolée."],
+      ["Base compilée"],
+      ["Les données proviennent de la BDD transactions hôtelières compilée. Aucune valeur absente n'est extrapolée."],
     ];
     XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(methodRows), "Méthodologie");
 

@@ -1,16 +1,18 @@
-export type Categorie = 1 | 2 | 3 | 4 | 5 | "Palace";
-export type Gamme = "Économique" | "Milieu de gamme" | "Upscale" | "Luxe";
+export type Categorie = 1 | 2 | 3 | 4 | 5 | "Palace" | "Non classé";
+export type Gamme = "Économique" | "Milieu de gamme" | "Upscale" | "Luxe" | "Non renseigné";
 export type HotelType =
   | "Business"
   | "Loisirs"
   | "Resort"
   | "Boutique"
-  | "Patrimonial";
+  | "Patrimonial"
+  | "Non renseigné";
 export type Exploitation =
   | "Indépendant"
   | "Franchise"
   | "Contrat de gestion"
-  | "Intégré";
+  | "Intégré"
+  | "Non renseigné";
 export type Fiabilite = "N1" | "N2" | "N3";
 export type Role = "Lecteur" | "Contributeur" | "Admin";
 
@@ -21,6 +23,8 @@ export interface SourceRef {
   fiabilite: Fiabilite;
   hypothese?: string;
   url?: string;
+  methodologie?: string;
+  exercice?: string;
 }
 
 export interface Equipements {
@@ -32,6 +36,7 @@ export interface Equipements {
   spa: boolean;
   spaSurface?: number | null;
   spaCabines?: number | null;
+  piscine: boolean;
   piscineInterieure: boolean;
   piscineExterieure: boolean;
   fitness: boolean;
@@ -76,6 +81,8 @@ export interface Hotel {
   siteUrl: string | null;
   source: SourceRef;
   demo: boolean;
+  /** Localisation qualitative issue de la base compilée (montagne, centre-ville…). */
+  localisation?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -120,15 +127,83 @@ export interface Transaction {
   id: string;
   hotelId: string;
   date: string;
-  acheteur: string;
-  vendeur: string;
-  prix: number;
-  prixParCle: number;
-  type: TransactionType;
+  acheteur: string | null;
+  vendeur: string | null;
+  prix: number | null;
+  prixParCle: number | null;
+  type: TransactionType | null;
   caAvant: number | null;
   caApres: number | null;
+  /** Exercice comptable d'origine (parfois un libellé : 2023-2024, NA…). */
+  exerciceCaAvant: string | null;
+  exerciceCaApres: string | null;
+  gammeAvant: Categorie | null;
+  gammeApres: Categorie | null;
+  clesAvant: number | null;
+  clesApres: number | null;
+  analyste: string | null;
+  localisation: string | null;
+  sourceAvant: SourceRef | null;
+  sourceApres: SourceRef | null;
   source: SourceRef;
   confidentielClient: boolean;
+}
+
+/** Observations annuelles d'exploitation (base MISSIONS). */
+export interface ExploitationYear {
+  id: string;
+  hotelId: string;
+  annee: number | null;
+  anneeLabel: string;
+  ca: number | null;
+  ebitda: number | null;
+  ebitdaPct: number | null;
+  source: SourceRef;
+  phase: "Avant cession" | "Après cession" | "Courant";
+}
+
+/** Prix/nuit observés (base MISSIONS) — table prête, vide dans le fichier fourni. */
+export interface PriceObservation {
+  id: string;
+  hotelId: string;
+  dateObservation: string;
+  prix: number;
+  categorieChambre: string | null;
+  source: SourceRef;
+}
+
+/** MICE annuel (base MISSIONS) — table prête, vide dans le fichier fourni. */
+export interface MiceObservation {
+  id: string;
+  hotelId: string;
+  annee: number;
+  nbSalles: number | null;
+  surfaceMice: number | null;
+  surfacePlusGrandeSalle: number | null;
+  source: SourceRef;
+}
+
+/** Valorisations NOVA (base MISSIONS) — table prête, vide dans le fichier fourni. */
+export interface ValuationObservation {
+  id: string;
+  hotelId: string;
+  annee: number;
+  valorisation: number;
+  methode: string | null;
+  source: SourceRef;
+}
+
+export interface IdentityObservation {
+  id: string;
+  hotelId: string;
+  dateObservation: string;
+  nom: string;
+  marque: string | null;
+  chambres: number | null;
+  surfaceTotale: number | null;
+  surfaceHebergement: number | null;
+  equipementsHorsResto: string[];
+  source: SourceRef;
 }
 
 export interface PipelineProject {
@@ -279,6 +354,11 @@ export interface AppState {
   kpis: KpiYear[];
   kpiHistory: KpiYear[];
   transactions: Transaction[];
+  exploitations: ExploitationYear[];
+  priceObservations: PriceObservation[];
+  miceObservations: MiceObservation[];
+  valuations: ValuationObservation[];
+  identities: IdentityObservation[];
   pipeline: PipelineProject[];
   users: User[];
   currentUserId: string;
