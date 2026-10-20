@@ -53,6 +53,7 @@ export default function ImportPage() {
           <>
             <Link
               href="/modeles/modele-import-hotels.csv"
+              prefetch={false}
               download
               className="inline-flex h-8 items-center gap-1.5 rounded-[4px] border border-line-strong bg-surface px-3 text-[11.5px] font-medium text-ink hover:border-navy/40"
             >
