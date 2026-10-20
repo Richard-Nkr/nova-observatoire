@@ -197,9 +197,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <Link href="/" aria-label="Nova Observatoire — accueil">
             <Logo />
           </Link>
-          <p className="mt-5 flex items-center gap-1.5 pl-[11px] text-[9px] font-medium uppercase tracking-[0.1em] text-faint">
+          <p className="mt-4 flex items-center gap-1.5 text-[8.5px] font-medium uppercase tracking-[0.12em] text-faint">
             <span className="size-1.5 rounded-full bg-accent" />
-            Observatoire hôtelier
+            Veille & stratégie hôtelière
           </p>
         </div>
         {nav()}

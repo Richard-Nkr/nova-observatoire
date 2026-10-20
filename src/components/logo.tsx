@@ -1,9 +1,11 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 /**
- * Wordmark NOVA OBSERVATOIRE.
- * Le logotype fourni est reconstruit en typographie afin de rester net
- * à toutes les tailles (sidebar, exports PowerPoint, favicon textuel).
+ * Wordmark officiel NOVA OBSERVATOIRE.
+ * Les fichiers sont des détourages du logotype fourni, déclinés en navy
+ * (fonds clairs) et en blanc (fonds sombres). Le mode compact ne conserve
+ * que le bloc NOVA pour la barre supérieure mobile.
  */
 export function Logo({
   variant = "dark",
@@ -15,35 +17,28 @@ export function Logo({
   compact?: boolean;
 }) {
   const light = variant === "light";
+  const src = compact
+    ? light
+      ? "/brand/nova-wordmark-light.png"
+      : "/brand/nova-wordmark.png"
+    : light
+      ? "/brand/nova-logo-light.png"
+      : "/brand/nova-logo.png";
+
   return (
     <div className={cn("flex flex-col leading-none", className)}>
-      <div className="flex items-center gap-2">
-        <span
-          aria-hidden
-          className={cn(
-            "block h-[17px] w-[3px]",
-            light ? "bg-[#c9916b]" : "bg-accent",
-          )}
-        />
-        <span
-          className={cn(
-            "font-logo text-[19px] tracking-[0.16em]",
-            light ? "text-white" : "text-navy",
-          )}
-        >
-          NOVA
-        </span>
-      </div>
-      {!compact && (
-        <span
-          className={cn(
-            "ml-[11px] mt-1.5 text-[7.5px] font-semibold uppercase tracking-[0.34em]",
-            light ? "text-white/55" : "text-muted",
-          )}
-        >
-          Observatoire
-        </span>
-      )}
+      <Image
+        src={src}
+        alt="NOVA Observatoire"
+        width={500}
+        height={compact ? 63 : 100}
+        priority
+        unoptimized
+        className={cn(
+          "block w-auto",
+          compact ? "h-[18px]" : "h-auto w-[178px]",
+        )}
+      />
     </div>
   );
 }
