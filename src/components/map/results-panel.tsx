@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import {
+  ArrowDown,
+  ArrowUp,
   ChevronRight,
   Columns3,
   GitCompareArrows,
@@ -16,7 +18,7 @@ import { kpiFor } from "@/lib/stats";
 import { cn } from "@/lib/utils";
 import type { SortDirection } from "@/lib/filters";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/field";
+import { Checkbox, Select } from "@/components/ui/field";
 import {
   Dialog,
   DialogBody,
@@ -57,6 +59,20 @@ const COLUMN_DEFS: {
 ];
 
 const DEFAULT_COLUMNS: ResultColumn[] = ["categorie", "caTotal"];
+
+/** Clés de tri proposées dans la barre visible du panneau de résultats. */
+const SORT_OPTIONS = [
+  { value: "caTotal", label: "CA total" },
+  { value: "caParCle", label: "CA / clé" },
+  { value: "cles", label: "Nombre de clés" },
+  { value: "categorie", label: "Catégorie" },
+  { value: "nom", label: "Nom" },
+  { value: "ville", label: "Ville" },
+  { value: "adr", label: "ADR" },
+  { value: "to", label: "Taux d’occupation" },
+  { value: "revpar", label: "RevPAR" },
+  { value: "note", label: "Note" },
+];
 
 export interface ResultsPanelProps {
   hotels: Hotel[];
@@ -144,6 +160,40 @@ export function ResultsPanel({
             </Button>
           )}
         </div>
+      </div>
+
+      {/* Tri explicite : la liste se réordonne immédiatement sans passer par l’en-tête. */}
+      <div className="flex shrink-0 items-center gap-2 border-b border-line bg-[#fbfcfe] px-3 py-2">
+        <span className="shrink-0 text-[9px] font-semibold uppercase tracking-[0.1em] text-muted">
+          Trier par
+        </span>
+        <Select
+          aria-label="Trier les hôtels par indicateur"
+          value={sortKey}
+          onChange={(value) => {
+            if (value !== sortKey) onSort(value);
+          }}
+          options={SORT_OPTIONS}
+          className="min-w-0 flex-1"
+        />
+        <Button
+          variant="outline"
+          size="iconSm"
+          onClick={() => onSort(sortKey)}
+          aria-label={
+            sortDirection === "asc"
+              ? "Passer en tri décroissant"
+              : "Passer en tri croissant"
+          }
+          title={sortDirection === "asc" ? "Croissant" : "Décroissant"}
+          className="shrink-0"
+        >
+          {sortDirection === "asc" ? (
+            <ArrowUp className="size-3.5" />
+          ) : (
+            <ArrowDown className="size-3.5" />
+          )}
+        </Button>
       </div>
 
       <div className="scroll-thin min-h-0 flex-1 overflow-auto">

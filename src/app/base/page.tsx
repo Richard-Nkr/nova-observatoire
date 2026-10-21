@@ -19,6 +19,7 @@ import { useStore } from "@/lib/store";
 import { BASE_INFO } from "@/lib/demo";
 import { fmtInt } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, PageHeader, ProgressBar, SectionTitle, StatTile } from "@/components/ui/misc";
 import { TableShell, Td, Th } from "@/components/ui/table";
 
@@ -142,9 +143,14 @@ export default function BasePage() {
         title="Base de données"
         description="Vision arborescente des sept bases qui structurent l’observatoire. Les tables absentes du classeur source restent visibles, vides et explicitement non documentées."
         actions={
-          <Badge tone="outline" className="px-2 py-1 text-[10px]">
-            <Database className="size-3" /> {BASE_INFO.sourceFile}
-          </Badge>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge tone="outline" className="px-2 py-1 text-[10px]">
+              <Database className="size-3" /> {BASE_INFO.sourceFile}
+            </Badge>
+            <Link href="/import" className={buttonVariants({ variant: "outline", size: "sm" })}>
+              <ArrowLeftRight className="size-3.5" /> Mettre à jour la base
+            </Link>
+          </div>
         }
       />
 

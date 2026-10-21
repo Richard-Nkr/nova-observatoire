@@ -91,6 +91,7 @@ src/
     benchmark.ts           secteurs, synthèses, sources
     market.ts              indicateurs de marché
     import.ts              mapping, normalisation, doublons, géocodage
+    database-sync.ts       export / réimport Excel de la base de travail
     exports.ts             Excel, CSV, PNG, PowerPoint
     market-export.ts       export Excel du marché
     geo.ts                 haversine, polygones, centroïdes
@@ -162,6 +163,15 @@ Les exports Excel comportent une feuille **Méthodologie** avec le périmètre, 
 
 Les noms de fichiers sont normalisés et horodatés par exercice. Les exports de données confidentielles sont réservés aux utilisateurs habilités et tracés dans le journal.
 
+### Aller-retour de la base
+
+L’onglet **Mise à jour de la base** de l’écran Import permet d’exporter un classeur `Nova_base_hotels_<exercice>.xlsx` contenant :
+
+- une feuille **Hôtels** avec une ligne par actif, la colonne `ID` stable, tous les champs éditables et les KPI de l’exercice ;
+- une feuille **Notice** rappelant les règles de saisie.
+
+Le classeur se réimporte après modification : une cellule vide laisse la valeur inchangée, `NULL` efface un champ nullable, les équipements s’écrivent `Oui`/`Non`. L’aperçu distingue les mises à jour, les lignes inchangées, les conflits, les ID inconnus et les lignes invalides. La source, la date, l’auteur et la fiabilité sont obligatoires ; une valeur N1 n’est jamais écrasée par N2/N3 et l’historique des KPI est conservé. Le CSV est également accepté.
+
 ## Import et enrichissement
 
 1. déposer un fichier CSV ou XLSX (8 Mo maximum, 1 000 lignes) ;
@@ -175,7 +185,7 @@ Un doublon est proposé lorsque le nom normalisé est identique et qu’un crit�
 L’estimateur de saisie manuelle applique des hypothèses explicites :
 
 - surface F&B ≈ 2,75 m² par couvert intérieur + 2 m² par couvert extérieur ;
-- CA estimé = clés × RevPAR médian de la zone × 365.
+- CA estimé = clés × CA médian par clé de la zone pour l’exercice retenu.
 
 Toute estimation crée une valeur **N3** avec son hypothèse, jamais une valeur présentée comme observée.
 

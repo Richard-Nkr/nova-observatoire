@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { TableShell, Td, Th } from "@/components/ui/table";
 import { ImportWizard } from "@/components/import/import-wizard";
 import { ManualHotelForm } from "@/components/import/manual-hotel-form";
+import { DatabaseSync } from "@/components/import/database-sync";
 
 const CONNECTORS = [
   {
@@ -34,7 +35,7 @@ const CONNECTORS = [
 
 export default function ImportPage() {
   const { state } = useStore();
-  const [tab, setTab] = useState("fichier");
+  const [tab, setTab] = useState("base");
 
   const stats = useMemo(() => {
     const lines = state.imports.reduce((total, batch) => total + batch.lignes, 0);
@@ -80,12 +81,14 @@ export default function ImportPage() {
         value={tab}
         onChange={setTab}
         tabs={[
+          { value: "base", label: "Mise à jour" },
           { value: "fichier", label: "Importer un fichier" },
           { value: "manuel", label: "Saisie manuelle" },
           { value: "historique", label: "Historique", count: state.imports.length },
         ]}
       />
 
+      {tab === "base" && <DatabaseSync />}
       {tab === "fichier" && <ImportWizard />}
       {tab === "manuel" && <ManualHotelForm />}
 
